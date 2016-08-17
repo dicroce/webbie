@@ -107,10 +107,10 @@ bool client_request::write_request( shared_ptr<ck_stream_io> socket ) const
 
     if( (_method == METHOD_POST || _method == METHOD_PATCH || _method == METHOD_PUT) &&
         !_contentType.contains("x-www-form-urlencoded") &&
-        _body.size_data() )
+        _body.size() )
     {
-        bytesWritten = socket->send(_body.map(), _body.size_data());
-        if(!socket->valid() || (bytesWritten != (int32_t)_body.size_data()))
+        bytesWritten = socket->send(&_body[0], _body.size());
+        if(!socket->valid() || (bytesWritten != (int32_t)_body.size()))
             return false;
     }
 
@@ -152,15 +152,13 @@ void client_request::add_header( const ck_string& name, const ck_string& value )
 
 void client_request::set_body( const ck_byte_ptr& body )
 {
-    _body.clear();
-
-    memcpy( _body.extend_data( body.length() ).get_ptr(), body.get_ptr(), body.length() );
+    _body.resize( body.length() );
+    memcpy( &_body[0], body.get_ptr(), body.length() );
 }
 
 void client_request::set_body( const cppkit::ck_string& body )
 {
     ck_byte_ptr src( body.c_str(), body.length() );
-
     set_body( src );
 }
 
@@ -205,10 +203,10 @@ ck_string client_request::_get_headers_as_string( const shared_ptr<ck_stream_io>
         {
             // Post, with an unknown body (this is the SOAP case)...
 
-            if( _body.size_data() )
+            if( _body.size() )
             {
                 // If we have a body, add a Content-Length and write it...
-                msgHeader += ck_string::format("Content-Length: %d\r\n\r\n", _body.size_data());
+                msgHeader += ck_string::format("Content-Length: %d\r\n\r\n", _body.size());
             }
             else
             {

@@ -45,12 +45,12 @@ static const unsigned int MAX_HEADER_LINE = 2048;
 client_response::client_response() :
     _initialLine(),
     _headerParts(),
-    _bodyContents(new ck_memory),
+    _bodyContents(),
     _success(false),
     _statusCode(-1),
     _chunkCallback(),
     _partCallback(),
-    _chunk(new ck_memory),
+    _chunk(),
     _streaming(false)
 {
 }
@@ -265,7 +265,8 @@ void client_response::_process_body(shared_ptr<ck_stream_io> socket)
 
         if(contentLength > 0)
         {
-            if(!_receive_data(socket, _bodyContents->extend_data(contentLength).get_ptr(), contentLength))
+            _bodyContents.resize( contentLength );
+            if(!_receive_data(socket, &_bodyContents[0], contentLength))
                 CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
         }
     }
@@ -293,17 +294,17 @@ void client_response::_process_body(shared_ptr<ck_stream_io> socket)
 
 const void* client_response::get_body() const
 {
-    return _bodyContents->map().get_ptr();
+    return &_bodyContents[0];
 }
 
 size_t client_response::get_body_size() const
 {
-    return _bodyContents->size_data();
+    return _bodyContents.size();
 }
 
 ck_string client_response::get_body_as_string() const
 {
-    return ck_string((char*)_bodyContents->map().get_ptr(), _bodyContents->size_data());
+    return ck_string((char*)&_bodyContents[0], _bodyContents.size());
 }
 
 ck_string client_response::get_header(const ck_string& name) const
@@ -379,8 +380,8 @@ void client_response::_read_chunked_body(shared_ptr<ck_stream_io> socket)
             // call our "chunk callback" function... Finally, we copy the new chunk into the
             // main body contents object.
 
-            _chunk->clear();
-            if(!_receive_data(socket, _chunk->extend_data(chunkLen).get_ptr(), chunkLen))
+            _chunk.resize( chunkLen );
+            if(!_receive_data(socket, &_chunk[0], chunkLen))
                 CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
 
             // call callback here...
@@ -390,8 +391,13 @@ void client_response::_read_chunked_body(shared_ptr<ck_stream_io> socket)
             // We only append a chunk to our "_bodyContents" if we are not streaming (
             // because "streams" potentially have no end, so an ck_memory that contains the
             // complete body contents would just grow forever).
+
+            size_t oldSize = _bodyContents.size();
+
+            _bodyContents.resize( oldSize + chunkLen );
+
             if(!_streaming)
-                memcpy(_bodyContents->extend_data(chunkLen).get_ptr(), _chunk->map().get_ptr(), chunkLen);
+                memcpy( &_bodyContents[oldSize], &_chunk[0], chunkLen);
 
             _read_end_of_line(socket);
         }
@@ -435,9 +441,9 @@ void client_response::_read_multi_part(shared_ptr<ck_stream_io> socket)
         {
             const int partContentLength = (*i).second.to_int();
 
-            _chunk->clear();
+            _chunk.resize(partContentLength);
 
-            if(!_receive_data(socket, _chunk->extend_data(partContentLength).get_ptr(), partContentLength))
+            if(!_receive_data(socket, &_chunk[0], partContentLength))
                 CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
 
             // call callback here...

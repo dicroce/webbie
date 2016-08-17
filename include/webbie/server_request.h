@@ -88,7 +88,7 @@ private:
     cppkit::ck_string _initialLine;
     std::map<std::string,cppkit::ck_string> _headerParts;
     std::map<std::string,cppkit::ck_string> _postVars;
-    cppkit::ck_memory _body;
+    mutable cppkit::ck_memory _body;
     cppkit::ck_string _contentType;
 };
 

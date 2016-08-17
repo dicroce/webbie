@@ -43,8 +43,8 @@ namespace webbie
 
 class client_response;
 
-typedef std::function<bool(std::shared_ptr<cppkit::ck_memory>, const client_response&)> chunk_callback;
-typedef std::function<bool(std::shared_ptr<cppkit::ck_memory>, const std::map<std::string, cppkit::ck_string>&, const client_response&)> part_callback;
+typedef std::function<bool(const std::vector<uint8_t>&, const client_response&)> chunk_callback;
+typedef std::function<bool(const std::vector<uint8_t>&, const std::map<std::string, cppkit::ck_string>&, const client_response&)> part_callback;
 
 class client_response
 {
@@ -68,8 +68,6 @@ public:
     CK_API size_t get_body_size() const;
 
     CK_API cppkit::ck_string get_body_as_string() const;
-
-    CK_API std::shared_ptr<const cppkit::ck_memory> get_body_buffer() const { return _bodyContents; }
 
     CK_API cppkit::ck_string get_header(const cppkit::ck_string& header) const;
 
@@ -110,12 +108,12 @@ private:
 
     cppkit::ck_string _initialLine;
     std::map<std::string, std::list<cppkit::ck_string> > _headerParts;
-    std::shared_ptr<cppkit::ck_memory> _bodyContents;
+    std::vector<uint8_t> _bodyContents;
     bool _success;
     int  _statusCode;
     chunk_callback _chunkCallback;
     part_callback _partCallback;
-    std::shared_ptr<cppkit::ck_memory> _chunk;
+    std::vector<uint8_t> _chunk;
     bool _streaming;
 };
 

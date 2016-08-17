@@ -200,12 +200,12 @@ map<string,ck_string> server_request::get_headers() const
 
 ck_byte_ptr server_request::get_body() const
 {
-    return _body.map();
+    return _body.map_data();
 }
 
 ck_string server_request::get_body_as_string() const
 {
-    return ck_string((char*)_body.map().get_ptr(), _body.size_data());
+    return ck_string((char*)_body.map_data().get_ptr(), _body.size_data());
 }
 
 map<string,ck_string> server_request::get_post_vars() const
@@ -331,7 +331,7 @@ void server_request::_process_body(shared_ptr<ck_stream_io> socket)
 
             if(contentType.contains("x-www-form-urlencoded"))
             {
-                ck_string rawBody((char*)_body.map().get_ptr(), (int)_body.size_data());
+                ck_string rawBody((char*)_body.map_data().get_ptr(), (int)_body.size_data());
 
                 vector<ck_string> parts = rawBody.split("&");
 

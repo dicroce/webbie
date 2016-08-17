@@ -37,6 +37,7 @@
 
 #include <unordered_map>
 #include <memory>
+#include <vector>
 
 #include "webbie/uri.h"
 #include "webbie/methods.h"
@@ -90,7 +91,8 @@ private:
     cppkit::ck_string _authData;
     std::unordered_map<std::string, cppkit::ck_string> _postVars;
     std::unordered_map<std::string, cppkit::ck_string> _headerParts;
-    cppkit::ck_memory _body;
+
+    mutable std::vector<uint8_t> _body;
     cppkit::ck_string _host;
     int _hostPort;
 };

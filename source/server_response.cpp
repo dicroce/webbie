@@ -94,29 +94,28 @@ ck_string server_response::get_content_type() const
 
 void server_response::set_body(const ck_string& body)
 {
-    size_t newBodyLength = body.length();
-
-    if(newBodyLength <= 0)
-        CK_STHROW(webbie_exception, ("Cannot specify 0 length body."));
-
-    _body.clear();
-
-    memcpy(_body.extend_data(body.length()).get_ptr(), body.c_str(), body.length());
+    set_body( body.length(), body.c_str() );
 }
 
-void server_response::set_body(const ck_memory& body)
+void server_response::set_body( size_t bodySize, const void* bits )
 {
-    _body = body;
+    _body.resize( bodySize );
+    memcpy( &_body[0], bits, bodySize );
+}
+
+size_t server_response::get_body_size() const
+{
+    return _body.size();
+}
+
+const void* server_response::get_body() const
+{
+    return &_body[0];
 }
 
 ck_string server_response::get_body_as_string() const
 {
-    return ck_string((char*)_body.map().get_ptr(), _body.size_data());
-}
-
-ck_memory server_response::get_body() const
-{
-    return _body;
+    return ck_string((char*)&_body[0], _body.size());
 }
 
 void server_response::clear_additional_headers()
@@ -154,7 +153,7 @@ bool server_response::write_response(shared_ptr<ck_stream_io> socket)
     // RStrip to remove \n added by ctime
     ck_string timeString = ck_string(cstr).rstrip();
 
-    if( (_body.size_data() > 0) && (_contentType.length() <= 0) )
+    if( (_body.size() > 0) && (_contentType.length() <= 0) )
         CK_STHROW(webbie_exception, ("Please set Content-Type: before calling write_response()."));
 
     ck_string responseHeader = ck_string::format("HTTP/1.1 %d %s\r\nDate: %s\r\n",
@@ -166,8 +165,7 @@ bool server_response::write_response(shared_ptr<ck_stream_io> socket)
         responseHeader += ck_string::format( "Content-Type: %s\r\n",
                                              _contentType.c_str() );
 
-    if (_body.size_data() != 0)
-        responseHeader += ck_string::format("Content-Length: %d\r\n", _body.size_data());
+    responseHeader += ck_string::format("Content-Length: %d\r\n", _body.size());
 
     auto i = _additionalHeaders.begin(), end = _additionalHeaders.end();
     while( i != end )
@@ -181,16 +179,16 @@ bool server_response::write_response(shared_ptr<ck_stream_io> socket)
     if(!_send_string(socket, responseHeader))
         return false;
 
-    if(_body.size_data() > 0)
+    if(_body.size() > 0)
     {
-        if(!_send_data(socket, _body.map().get_ptr(), _body.size_data()))
+        if(!_send_data(socket, &_body[0], _body.size()))
             return false;
     }
 
     return true;
 }
 
-bool server_response::write_chunk(shared_ptr<ck_stream_io> socket, shared_ptr<ck_memory> chunk)
+bool server_response::write_chunk(shared_ptr<ck_stream_io> socket, size_t sizeChunk, const void* bits)
 {
     if(!_headerWritten)
     {
@@ -198,12 +196,12 @@ bool server_response::write_chunk(shared_ptr<ck_stream_io> socket, shared_ptr<ck
             return false;
     }
 
-    const ck_string chunkSizeString = ck_string::format("%s;\r\n", ck_string::from_uint((unsigned int)chunk->size_data(), 16).c_str());
+    const ck_string chunkSizeString = ck_string::format("%s;\r\n", ck_string::from_uint((unsigned int)sizeChunk, 16).c_str());
 
     if(!_send_string(socket, chunkSizeString))
         return false;
 
-    if(!_send_data(socket, chunk->map().get_ptr(), chunk->size_data()))
+    if(!_send_data(socket, bits, sizeChunk))
         return false;
 
     if(!_send_string(socket, "\r\n"))
@@ -215,18 +213,6 @@ bool server_response::write_chunk(shared_ptr<ck_stream_io> socket, shared_ptr<ck
 bool server_response::write_chunk_finalizer(shared_ptr<ck_stream_io> socket)
 {
     return _send_string(socket, "0\r\n\r\n");
-}
-
-bool server_response::write_part(shared_ptr<cppkit::ck_stream_io> socket,
-                                 const cppkit::ck_string& boundary,
-                                 const map<string,ck_string>& partHeaders,
-                                 shared_ptr<cppkit::ck_memory> chunk)
-{
-    return write_part(socket,
-                      boundary,
-                      partHeaders,
-                      chunk->map().get_ptr(),
-                      (uint32_t)chunk->size_data());
 }
 
 bool server_response::write_part(shared_ptr<cppkit::ck_stream_io> socket,

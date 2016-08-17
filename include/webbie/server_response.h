@@ -33,7 +33,7 @@
 #include "status_codes.h"
 #include "cppkit/ck_stream_io.h"
 #include "cppkit/ck_string.h"
-#include "cppkit/ck_memory.h"
+#include <vector>
 #include <list>
 #include <map>
 
@@ -67,10 +67,12 @@ public:
     CK_API cppkit::ck_string get_content_type() const;
 
     CK_API void set_body(const cppkit::ck_string& body);
-    CK_API void set_body(const cppkit::ck_memory& body);
+    CK_API void set_body( size_t bodySize, const void* bits );
+
+    CK_API size_t get_body_size() const;
+    CK_API const void* get_body() const;
 
     CK_API cppkit::ck_string get_body_as_string() const;
-    CK_API cppkit::ck_memory get_body() const;
 
     CK_API void clear_additional_headers();
     CK_API void add_additional_header(const cppkit::ck_string& headerName,
@@ -80,16 +82,12 @@ public:
     CK_API bool write_response(std::shared_ptr<cppkit::ck_stream_io> socket);
 
     // Chunked transfer encoding support...
-    CK_API bool write_chunk(std::shared_ptr<cppkit::ck_stream_io> socket, std::shared_ptr<cppkit::ck_memory> chunk);
+    CK_API bool write_chunk(std::shared_ptr<cppkit::ck_stream_io> socket, size_t sizeChunk, const void* bits);
     CK_API bool write_chunk_finalizer(std::shared_ptr<cppkit::ck_stream_io> socket);
 
     // Multipart mimetype support
     // WritePart() will automaticaly add a Content-Length header per
     // part.
-    CK_API bool write_part( std::shared_ptr<cppkit::ck_stream_io> socket,
-                            const cppkit::ck_string& boundary,
-                            const std::map<std::string,cppkit::ck_string>& partHeaders,
-                            std::shared_ptr<cppkit::ck_memory> chunk );
 
     CK_API bool write_part( std::shared_ptr<cppkit::ck_stream_io> socket,
                             const cppkit::ck_string& boundary,
@@ -107,7 +105,7 @@ private:
 
     status_code _status;
     cppkit::ck_string _contentType;
-    cppkit::ck_memory _body;
+    mutable std::vector<uint8_t> _body;
     bool _headerWritten;
     std::map<std::string,cppkit::ck_string> _additionalHeaders;
 };
