@@ -33,7 +33,7 @@
 #include <list>
 #include <map>
 #include <memory>
-#include "cppkit/ck_stream_io.h"
+#include "cppkit/interfaces/ck_stream_io.h"
 #include "cppkit/ck_string.h"
 #include "cppkit/ck_memory.h"
 #include "cppkit/ck_byte_ptr.h"
@@ -54,7 +54,7 @@ public:
 
     CK_API server_request& operator = (const server_request& rhs);
 
-    CK_API void read_request(std::shared_ptr<cppkit::ck_stream_io> socket);
+    CK_API void read_request(cppkit::ck_stream_io& socket);
 
     CK_API int get_method() const;
 
@@ -78,12 +78,12 @@ public:
 
 private:
     void _set_header(const cppkit::ck_string& name, const cppkit::ck_string& value);
-    bool _receive_data(std::shared_ptr<cppkit::ck_stream_io> socket, void* data, size_t dataLen);
-    void _clean_socket(std::shared_ptr<cppkit::ck_stream_io> socket, char** writer);
-    void _read_header_line(std::shared_ptr<cppkit::ck_stream_io> socket, char* writer, bool firstLine);
+    bool _receive_data(cppkit::ck_stream_io& socket, void* data, size_t dataLen);
+    void _clean_socket(cppkit::ck_stream_io& socket, char** writer);
+    void _read_header_line(cppkit::ck_stream_io& socket, char* writer, bool firstLine);
     bool _add_line(std::list<cppkit::ck_string>& lines, const cppkit::ck_string& line);
     void _process_request_lines(const std::list<cppkit::ck_string>& requestLines);
-    void _process_body(std::shared_ptr<cppkit::ck_stream_io> socket);
+    void _process_body(cppkit::ck_stream_io& socket);
 
     cppkit::ck_string _initialLine;
     std::map<std::string,cppkit::ck_string> _headerParts;

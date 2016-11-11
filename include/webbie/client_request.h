@@ -30,7 +30,7 @@
 #ifndef webbie_client_request_h
 #define webbie_client_request_h
 
-#include "cppkit/ck_stream_io.h"
+#include "cppkit/interfaces/ck_stream_io.h"
 #include "cppkit/ck_string.h"
 #include "cppkit/ck_memory.h"
 #include "cppkit/ck_byte_ptr.h"
@@ -64,7 +64,7 @@ public:
 
     CK_API void set_method( int method );
 
-    CK_API bool write_request( std::shared_ptr<cppkit::ck_stream_io> socket ) const;
+    CK_API bool write_request( cppkit::ck_stream_io& socket ) const;
 
     CK_API void set_accept_type( const cppkit::ck_string& acceptType );
 
@@ -82,7 +82,7 @@ public:
     CK_API void set_body( const cppkit::ck_string& body );
 
 private:
-    cppkit::ck_string _get_headers_as_string( const std::shared_ptr<cppkit::ck_stream_io> socket ) const;
+    cppkit::ck_string _get_headers_as_string( cppkit::ck_stream_io& socket ) const;
 
     uri _uri;
     cppkit::ck_string _acceptType;

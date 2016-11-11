@@ -34,7 +34,7 @@
 #include <vector>
 #include <map>
 #include <functional>
-#include "cppkit/ck_stream_io.h"
+#include "cppkit/interfaces/ck_stream_io.h"
 #include "cppkit/ck_string.h"
 #include "cppkit/ck_memory.h"
 
@@ -57,7 +57,7 @@ public:
 
     CK_API client_response& operator = (const client_response& obj);
 
-    CK_API void read_response(std::shared_ptr<cppkit::ck_stream_io> socket);
+    CK_API void read_response(cppkit::ck_stream_io& socket);
 
     CK_API cppkit::ck_string get_message();
 
@@ -83,23 +83,23 @@ public:
     CK_API void register_part_callback( part_callback pb );
 
 private:
-    void _read_chunked_body(std::shared_ptr<cppkit::ck_stream_io> socket);
-    void _read_multi_part(std::shared_ptr<cppkit::ck_stream_io> socket);
-    std::map<std::string, cppkit::ck_string> _read_multi_header_lines(std::shared_ptr<cppkit::ck_stream_io> socket, char* lineBuf);
-    void _read_end_of_line(std::shared_ptr<cppkit::ck_stream_io> socket);
+    void _read_chunked_body(cppkit::ck_stream_io& socket);
+    void _read_multi_part(cppkit::ck_stream_io& socket);
+    std::map<std::string, cppkit::ck_string> _read_multi_header_lines(cppkit::ck_stream_io& socket, char* lineBuf);
+    void _read_end_of_line(cppkit::ck_stream_io& socket);
 
     bool _is_legal_chunk_size_char(char ch) { return isxdigit(ch) ? true : false; } // VS warning: forcing int to bool.
     bool _embed_null(char* lineBuf);
-    void _consume_footer(std::shared_ptr<cppkit::ck_stream_io> socket);
+    void _consume_footer(cppkit::ck_stream_io& socket);
 
     void _add_header(const cppkit::ck_string& name, const cppkit::ck_string& value);
 
-    bool _receive_data(std::shared_ptr<cppkit::ck_stream_io> socket, void* data, size_t dataLen);
-    void _clean_socket(std::shared_ptr<cppkit::ck_stream_io> socket, char** writer);
-    void _read_header_line(std::shared_ptr<cppkit::ck_stream_io> socket, char* writer, bool firstLine);
+    bool _receive_data(cppkit::ck_stream_io& socket, void* data, size_t dataLen);
+    void _clean_socket(cppkit::ck_stream_io& socket, char** writer);
+    void _read_header_line(cppkit::ck_stream_io& socket, char* writer, bool firstLine);
     bool _add_line(std::list<cppkit::ck_string>& lines, const cppkit::ck_string& line);
     void _process_request_lines(const std::list<cppkit::ck_string>& requestLines);
-    void _process_body(std::shared_ptr<cppkit::ck_stream_io> socket);
+    void _process_body(cppkit::ck_stream_io& socket);
 
     bool _is_end_of_line(char* buffer)
     {

@@ -97,20 +97,20 @@ void client_request::set_method( int method )
     _method = method;
 }
 
-bool client_request::write_request( shared_ptr<ck_stream_io> socket ) const
+bool client_request::write_request( ck_stream_io& socket ) const
 {
     ck_string msgHeader = _get_headers_as_string( socket );
 
-    ssize_t bytesWritten = socket->send( msgHeader.c_str(), msgHeader.length() );
-    if( !socket->valid() || (bytesWritten != (int32_t)msgHeader.length()) )
+    ssize_t bytesWritten = socket.send( msgHeader.c_str(), msgHeader.length() );
+    if( !socket.valid() || (bytesWritten != (int32_t)msgHeader.length()) )
         return false;
 
     if( (_method == METHOD_POST || _method == METHOD_PATCH || _method == METHOD_PUT) &&
         !_contentType.contains("x-www-form-urlencoded") &&
         _body.size() )
     {
-        bytesWritten = socket->send(&_body[0], _body.size());
-        if(!socket->valid() || (bytesWritten != (int32_t)_body.size()))
+        bytesWritten = socket.send(&_body[0], _body.size());
+        if(!socket.valid() || (bytesWritten != (int32_t)_body.size()))
             return false;
     }
 
@@ -162,7 +162,7 @@ void client_request::set_body( const cppkit::ck_string& body )
     set_body( src );
 }
 
-ck_string client_request::_get_headers_as_string( const shared_ptr<ck_stream_io> socket ) const
+ck_string client_request::_get_headers_as_string( ck_stream_io& socket ) const
 {
     ck_string msgHeader;
     msgHeader = method_text( _method ) + " " + _uri.get_full_raw_uri() + " HTTP/1.1\r\nHost: " + _host + ":" + ck_string::from_int( _hostPort ) + "\r\n";

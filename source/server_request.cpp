@@ -74,7 +74,7 @@ server_request& server_request::operator = (const server_request& obj)
     return *this;
 }
 
-void server_request::read_request(shared_ptr<cppkit::ck_stream_io> socket)
+void server_request::read_request(cppkit::ck_stream_io& socket)
 {
     list<ck_string> requestLines;
 
@@ -213,16 +213,16 @@ map<string,ck_string> server_request::get_post_vars() const
     return _postVars;
 }
 
-bool server_request::_receive_data(shared_ptr<ck_stream_io> socket, void* data, size_t dataLen)
+bool server_request::_receive_data(ck_stream_io& socket, void* data, size_t dataLen)
 {
-    const ssize_t bytesSent = socket->recv(data, dataLen);
+    const ssize_t bytesSent = socket.recv(data, dataLen);
 
-    return socket->valid() && bytesSent == (ssize_t)dataLen;
+    return socket.valid() && bytesSent == (ssize_t)dataLen;
 }
 
-void server_request::_clean_socket(shared_ptr<ck_stream_io> socket, char** writer)
+void server_request::_clean_socket(ck_stream_io& socket, char** writer)
 {
-    if(!socket->valid())
+    if(!socket.valid())
         CK_STHROW(webbie_exception, ("Invalid Socket"));
 
     char tempBuffer[1];
@@ -242,7 +242,7 @@ void server_request::_clean_socket(shared_ptr<ck_stream_io> socket, char** write
     }
 }
 
-void server_request::_read_header_line(shared_ptr<ck_stream_io> socket, char* writer, bool firstLine)
+void server_request::_read_header_line(ck_stream_io& socket, char* writer, bool firstLine)
 {
     bool lineDone = false;
     size_t bytesReadThisLine = 0;
@@ -302,7 +302,7 @@ void server_request::_process_request_lines(const list<ck_string>& requestLines)
     }
 }
 
-void server_request::_process_body(shared_ptr<ck_stream_io> socket)
+void server_request::_process_body(ck_stream_io& socket)
 {
     ck_string contentLengthString;
     bool foundContentLength = get_header("Content-Length", contentLengthString);

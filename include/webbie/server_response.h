@@ -31,7 +31,7 @@
 #define webbie_server_response_h
 
 #include "status_codes.h"
-#include "cppkit/ck_stream_io.h"
+#include "cppkit/interfaces/ck_stream_io.h"
 #include "cppkit/ck_string.h"
 #include <vector>
 #include <list>
@@ -79,29 +79,29 @@ public:
                                       const cppkit::ck_string& headerValue);
     CK_API cppkit::ck_string get_additional_header(const cppkit::ck_string& headerName);
 
-    CK_API bool write_response(std::shared_ptr<cppkit::ck_stream_io> socket);
+    CK_API bool write_response(cppkit::ck_stream_io& socket);
 
     // Chunked transfer encoding support...
-    CK_API bool write_chunk(std::shared_ptr<cppkit::ck_stream_io> socket, size_t sizeChunk, const void* bits);
-    CK_API bool write_chunk_finalizer(std::shared_ptr<cppkit::ck_stream_io> socket);
+    CK_API bool write_chunk(cppkit::ck_stream_io& socket, size_t sizeChunk, const void* bits);
+    CK_API bool write_chunk_finalizer(cppkit::ck_stream_io& socket);
 
     // Multipart mimetype support
     // WritePart() will automaticaly add a Content-Length header per
     // part.
 
-    CK_API bool write_part( std::shared_ptr<cppkit::ck_stream_io> socket,
+    CK_API bool write_part( cppkit::ck_stream_io& socket,
                             const cppkit::ck_string& boundary,
                             const std::map<std::string,cppkit::ck_string>& partHeaders,
                             void* chunk,
                             uint32_t size );
 
-    CK_API bool write_part_finalizer(std::shared_ptr<cppkit::ck_stream_io> socket, const cppkit::ck_string& boundary);
+    CK_API bool write_part_finalizer(cppkit::ck_stream_io& socket, const cppkit::ck_string& boundary);
 
 private:
     cppkit::ck_string _get_status_message(status_code sc);
-    bool _write_header(std::shared_ptr<cppkit::ck_stream_io> socket);
-    bool _send_string(std::shared_ptr<cppkit::ck_stream_io> socket, const cppkit::ck_string& line);
-    bool _send_data(std::shared_ptr<cppkit::ck_stream_io> socket, const void* data, size_t dataLen);
+    bool _write_header(cppkit::ck_stream_io& socket);
+    bool _send_string(cppkit::ck_stream_io& socket, const cppkit::ck_string& line);
+    bool _send_data(cppkit::ck_stream_io& socket, const void* data, size_t dataLen);
 
     status_code _status;
     cppkit::ck_string _contentType;

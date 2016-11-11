@@ -89,7 +89,7 @@ client_response& client_response::operator = (const client_response& rhs)
     return *this;
 }
 
-void client_response::read_response(shared_ptr<ck_stream_io> socket)
+void client_response::read_response(ck_stream_io& socket)
 {
 READ_BEGIN:
 
@@ -160,16 +160,16 @@ READ_BEGIN:
     _process_body(socket);
 }
 
-bool client_response::_receive_data(shared_ptr<ck_stream_io> socket, void* data, size_t dataLen)
+bool client_response::_receive_data(ck_stream_io& socket, void* data, size_t dataLen)
 {
-    const ssize_t bytesSent = socket->recv(data, dataLen);
+    const ssize_t bytesSent = socket.recv(data, dataLen);
 
-    return socket->valid() && bytesSent == (ssize_t)dataLen;
+    return socket.valid() && bytesSent == (ssize_t)dataLen;
 }
 
-void client_response::_clean_socket(shared_ptr<ck_stream_io> socket, char** writer)
+void client_response::_clean_socket(ck_stream_io& socket, char** writer)
 {
-    if(!socket->valid())
+    if(!socket.valid())
         CK_STHROW(webbie_exception, ("Invalid Socket"));
 
     char tempBuffer[1];
@@ -189,7 +189,7 @@ void client_response::_clean_socket(shared_ptr<ck_stream_io> socket, char** writ
     }
 }
 
-void client_response::_read_header_line(shared_ptr<ck_stream_io> socket, char* writer, bool firstLine)
+void client_response::_read_header_line(ck_stream_io& socket, char* writer, bool firstLine)
 {
     bool lineDone = false;
     size_t bytesReadThisLine = 0;
@@ -198,7 +198,7 @@ void client_response::_read_header_line(shared_ptr<ck_stream_io> socket, char* w
     while(!lineDone && (bytesReadThisLine + 1) < MAX_HEADER_LINE)
     {
         if(!_receive_data(socket, writer, 1))
-            CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
+            CK_STHROW(webbie_exception, ("Failed to read data from socket"));
 
         ++bytesReadThisLine;
 
@@ -255,7 +255,7 @@ void client_response::_process_request_lines(const list<ck_string>& requestLines
     }
 }
 
-void client_response::_process_body(shared_ptr<ck_stream_io> socket)
+void client_response::_process_body(ck_stream_io& socket)
 {
     /// Get the body if we were given a Content Length
     auto found = _headerParts.find( "content-length" );
@@ -267,7 +267,7 @@ void client_response::_process_body(shared_ptr<ck_stream_io> socket)
         {
             _bodyContents.resize( contentLength );
             if(!_receive_data(socket, &_bodyContents[0], contentLength))
-                CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
+                CK_STHROW(webbie_exception, ("Failed to read data from socket"));
         }
     }
     else if( (found = _headerParts.find( "transfer-encoding" )) != _headerParts.end() )
@@ -354,7 +354,7 @@ void client_response::register_part_callback( part_callback pb )
     _partCallback = pb;
 }
 
-void client_response::_read_chunked_body(shared_ptr<ck_stream_io> socket)
+void client_response::_read_chunked_body(ck_stream_io& socket)
 {
     char lineBuf[MAX_HEADER_LINE+1];
     bool moreChunks = true;
@@ -382,7 +382,7 @@ void client_response::_read_chunked_body(shared_ptr<ck_stream_io> socket)
 
             _chunk.resize( chunkLen );
             if(!_receive_data(socket, &_chunk[0], chunkLen))
-                CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
+                CK_STHROW(webbie_exception, ("Failed to read data from socket"));
 
             // call callback here...
             if( _chunkCallback )
@@ -419,7 +419,7 @@ bool client_response::_embed_null(char* lineBuf)
     return false;
 }
 
-void client_response::_read_multi_part(shared_ptr<ck_stream_io> socket)
+void client_response::_read_multi_part(ck_stream_io& socket)
 {
     char lineBuf[MAX_HEADER_LINE+1];
     bool moreParts = true;
@@ -458,19 +458,19 @@ void client_response::_read_multi_part(shared_ptr<ck_stream_io> socket)
 }
 
 
-void client_response::_read_end_of_line(shared_ptr<ck_stream_io> socket)
+void client_response::_read_end_of_line(ck_stream_io& socket)
 {
     char lineEnd[2] = {0, 0};
 
     {
         if(!_receive_data(socket, &lineEnd[0], 1))
-            CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
+            CK_STHROW(webbie_exception, ("Failed to read data from socket"));
     }
 
     if(lineEnd[0] == '\r')
     {
         if(!_receive_data(socket, &lineEnd[1], 1))
-            CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
+            CK_STHROW(webbie_exception, ("Failed to read data from socket"));
     }
 
     if(!_is_end_of_line(lineEnd))
@@ -478,7 +478,7 @@ void client_response::_read_end_of_line(shared_ptr<ck_stream_io> socket)
 }
 
 
-map<string,ck_string> client_response::_read_multi_header_lines(shared_ptr<ck_stream_io> socket, char* lineBuf)
+map<string,ck_string> client_response::_read_multi_header_lines(ck_stream_io& socket, char* lineBuf)
 {
     std::list<ck_string> partLines;
 
@@ -515,7 +515,7 @@ void client_response::debug_print_request()
     fflush(stdout);
 }
 
-void client_response::_consume_footer(shared_ptr<ck_stream_io> socket)
+void client_response::_consume_footer(ck_stream_io& socket)
 {
     char lineBuf[MAX_HEADER_LINE+1];
 

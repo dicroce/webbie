@@ -142,7 +142,7 @@ ck_string server_response::get_additional_header(const ck_string& headerName)
     return ck_string();
 }
 
-bool server_response::write_response(shared_ptr<ck_stream_io> socket)
+bool server_response::write_response(ck_stream_io& socket)
 {
     time_t now = time(0);
     char* cstr = ctime(&now);
@@ -188,7 +188,7 @@ bool server_response::write_response(shared_ptr<ck_stream_io> socket)
     return true;
 }
 
-bool server_response::write_chunk(shared_ptr<ck_stream_io> socket, size_t sizeChunk, const void* bits)
+bool server_response::write_chunk(ck_stream_io& socket, size_t sizeChunk, const void* bits)
 {
     if(!_headerWritten)
     {
@@ -210,12 +210,12 @@ bool server_response::write_chunk(shared_ptr<ck_stream_io> socket, size_t sizeCh
     return true;
 }
 
-bool server_response::write_chunk_finalizer(shared_ptr<ck_stream_io> socket)
+bool server_response::write_chunk_finalizer(ck_stream_io& socket)
 {
     return _send_string(socket, "0\r\n\r\n");
 }
 
-bool server_response::write_part(shared_ptr<cppkit::ck_stream_io> socket,
+bool server_response::write_part(cppkit::ck_stream_io& socket,
                                  const cppkit::ck_string& boundary,
                                  const map<string,ck_string>& partHeaders,
                                  void* chunk,
@@ -249,7 +249,7 @@ bool server_response::write_part(shared_ptr<cppkit::ck_stream_io> socket,
     return true;
 }
 
-bool server_response::write_part_finalizer(shared_ptr<cppkit::ck_stream_io> socket, const cppkit::ck_string& boundary)
+bool server_response::write_part_finalizer(cppkit::ck_stream_io& socket, const cppkit::ck_string& boundary)
 {
     return _send_string(socket, ck_string::format("--%s--\r\n", boundary.c_str()));
 }
@@ -304,7 +304,7 @@ ck_string server_response::_get_status_message(status_code sc)
     CK_STHROW(webbie_exception, ("Unknown status code."));
 }
 
-bool server_response::_write_header(shared_ptr<ck_stream_io> socket)
+bool server_response::_write_header(ck_stream_io& socket)
 {
     time_t now = time(0);
     char* cstr = ctime(&now);
@@ -339,14 +339,14 @@ bool server_response::_write_header(shared_ptr<ck_stream_io> socket)
     return true;
 }
 
-bool server_response::_send_string(shared_ptr<ck_stream_io> socket, const ck_string& line)
+bool server_response::_send_string(ck_stream_io& socket, const ck_string& line)
 {
     return _send_data(socket, line.c_str(), line.size());
 }
 
-bool server_response::_send_data(shared_ptr<ck_stream_io> socket, const void* data, size_t dataLen)
+bool server_response::_send_data(ck_stream_io& socket, const void* data, size_t dataLen)
 {
-    const ssize_t bytesSent = socket->send(data, dataLen);
+    const ssize_t bytesSent = socket.send(data, dataLen);
 
-    return socket->valid() && bytesSent == (ssize_t)dataLen;
+    return socket.valid() && bytesSent == (ssize_t)dataLen;
 }
