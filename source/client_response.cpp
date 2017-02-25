@@ -160,13 +160,6 @@ READ_BEGIN:
     _process_body(socket);
 }
 
-bool client_response::_receive_data(ck_stream_io& socket, void* data, size_t dataLen)
-{
-    const ssize_t bytesSent = socket.recv(data, dataLen);
-
-    return socket.valid() && bytesSent == (ssize_t)dataLen;
-}
-
 void client_response::_clean_socket(ck_stream_io& socket, char** writer)
 {
     if(!socket.valid())
@@ -177,8 +170,7 @@ void client_response::_clean_socket(ck_stream_io& socket, char** writer)
     // Clear junk off the socket
     while(true)
     {
-        if(!_receive_data(socket, tempBuffer, 1))
-            CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
+        socket.recv(tempBuffer, 1);
 
         if(!ck_string::is_space(tempBuffer[0]))
         {
@@ -197,8 +189,7 @@ void client_response::_read_header_line(ck_stream_io& socket, char* writer, bool
     // Get initial header line
     while(!lineDone && (bytesReadThisLine + 1) < MAX_HEADER_LINE)
     {
-        if(!_receive_data(socket, writer, 1))
-            CK_STHROW(webbie_exception, ("Failed to read data from socket"));
+        socket.recv(writer, 1);
 
         ++bytesReadThisLine;
 
@@ -266,8 +257,7 @@ void client_response::_process_body(ck_stream_io& socket)
         if(contentLength > 0)
         {
             _bodyContents.resize( contentLength );
-            if(!_receive_data(socket, &_bodyContents[0], contentLength))
-                CK_STHROW(webbie_exception, ("Failed to read data from socket"));
+            socket.recv(&_bodyContents[0], contentLength);
         }
     }
     else if( (found = _headerParts.find( "transfer-encoding" )) != _headerParts.end() )
@@ -381,8 +371,7 @@ void client_response::_read_chunked_body(ck_stream_io& socket)
             // main body contents object.
 
             _chunk.resize( chunkLen );
-            if(!_receive_data(socket, &_chunk[0], chunkLen))
-                CK_STHROW(webbie_exception, ("Failed to read data from socket"));
+            socket.recv(&_chunk[0], chunkLen);
 
             // call callback here...
             if( _chunkCallback )
@@ -443,8 +432,7 @@ void client_response::_read_multi_part(ck_stream_io& socket)
 
             _chunk.resize(partContentLength);
 
-            if(!_receive_data(socket, &_chunk[0], partContentLength))
-                CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
+            socket.recv(&_chunk[0], partContentLength);
 
             // call callback here...
             if( _partCallback )
@@ -462,16 +450,10 @@ void client_response::_read_end_of_line(ck_stream_io& socket)
 {
     char lineEnd[2] = {0, 0};
 
-    {
-        if(!_receive_data(socket, &lineEnd[0], 1))
-            CK_STHROW(webbie_exception, ("Failed to read data from socket"));
-    }
+    socket.recv(&lineEnd[0], 1);
 
     if(lineEnd[0] == '\r')
-    {
-        if(!_receive_data(socket, &lineEnd[1], 1))
-            CK_STHROW(webbie_exception, ("Failed to read data from socket"));
-    }
+        socket.recv(&lineEnd[1], 1);
 
     if(!_is_end_of_line(lineEnd))
         CK_STHROW(webbie_exception, ("A chunk line didn't end with appropriate terminator."));

@@ -37,6 +37,7 @@
 #include "cppkit/ck_string.h"
 #include "cppkit/ck_memory.h"
 #include "cppkit/ck_byte_ptr.h"
+#include "cppkit/ck_nullable.h"
 #include "webbie/uri.h"
 #include "webbie/methods.h"
 
@@ -62,7 +63,7 @@ public:
 
     CK_API cppkit::ck_string get_content_type() const;
 
-    CK_API bool get_header( const cppkit::ck_string& key, cppkit::ck_string& val ) const;
+    CK_API cppkit::ck_nullable<cppkit::ck_string> get_header( const cppkit::ck_string& key ) const;
     CK_API std::map<std::string,cppkit::ck_string> get_headers() const;
 
     CK_API cppkit::ck_byte_ptr get_body() const;
@@ -78,7 +79,6 @@ public:
 
 private:
     void _set_header(const cppkit::ck_string& name, const cppkit::ck_string& value);
-    bool _receive_data(cppkit::ck_stream_io& socket, void* data, size_t dataLen);
     void _clean_socket(cppkit::ck_stream_io& socket, char** writer);
     void _read_header_line(cppkit::ck_stream_io& socket, char* writer, bool firstLine);
     bool _add_line(std::list<cppkit::ck_string>& lines, const cppkit::ck_string& line);

@@ -142,7 +142,7 @@ ck_string server_response::get_additional_header(const ck_string& headerName)
     return ck_string();
 }
 
-bool server_response::write_response(ck_stream_io& socket)
+void server_response::write_response(ck_stream_io& socket)
 {
     time_t now = time(0);
     char* cstr = ctime(&now);
@@ -176,53 +176,40 @@ bool server_response::write_response(ck_stream_io& socket)
 
     responseHeader += ck_string::format("\r\n");
 
-    if(!_send_string(socket, responseHeader))
-        return false;
+    socket.send(responseHeader.c_str(), responseHeader.length());
 
     if(_body.size() > 0)
-    {
-        if(!_send_data(socket, &_body[0], _body.size()))
-            return false;
-    }
-
-    return true;
+        socket.send(&_body[0], _body.size());
 }
 
-bool server_response::write_chunk(ck_stream_io& socket, size_t sizeChunk, const void* bits)
+void server_response::write_chunk(ck_stream_io& socket, size_t sizeChunk, const void* bits)
 {
     if(!_headerWritten)
-    {
-        if(!_write_header(socket))
-            return false;
-    }
+        _write_header(socket);
 
-    const ck_string chunkSizeString = ck_string::format("%s;\r\n", ck_string::from_uint((unsigned int)sizeChunk, 16).c_str());
+    auto chunkSizeString = ck_string::format("%s;\r\n", ck_string::from_uint((unsigned int)sizeChunk, 16).c_str());
+    socket.send(chunkSizeString.c_str(), chunkSizeString.length());
 
-    if(!_send_string(socket, chunkSizeString))
-        return false;
+    socket.send(bits, sizeChunk);
 
-    if(!_send_data(socket, bits, sizeChunk))
-        return false;
-
-    if(!_send_string(socket, "\r\n"))
-        return false;
-
-    return true;
+    ck_string newLine("\r\n");
+    socket.send(newLine.c_str(), newLine.length());
 }
 
-bool server_response::write_chunk_finalizer(ck_stream_io& socket)
+void server_response::write_chunk_finalizer(ck_stream_io& socket)
 {
-    return _send_string(socket, "0\r\n\r\n");
+    ck_string finalizer("0\r\n\r\n");
+    socket.send(finalizer.c_str(), finalizer.length());
 }
 
-bool server_response::write_part(cppkit::ck_stream_io& socket,
+void server_response::write_part(cppkit::ck_stream_io& socket,
                                  const cppkit::ck_string& boundary,
                                  const map<string,ck_string>& partHeaders,
                                  void* chunk,
                                  uint32_t size)
 {
-    if(!_send_string(socket, ck_string::format("--%s\r\n", boundary.c_str())))
-        return false;
+    auto boundaryLine = ck_string::format("--%s\r\n", boundary.c_str());
+    socket.send(boundaryLine.c_str(), boundaryLine.length());
 
     for( auto i = partHeaders.begin(); i != partHeaders.end(); i++ )
     {
@@ -230,31 +217,27 @@ bool server_response::write_part(cppkit::ck_stream_io& socket,
         ck_string headerValue = (*i).second;
         ck_string headerLine = ck_string::format("%s: %s\r\n",headerName.c_str(),headerValue.c_str());
 
-        if( !_send_string( socket, headerLine ) )
-            return false;
+        socket.send(headerLine.c_str(), headerLine.length());
     }
 
-    if(!_send_string(socket, ck_string::format("Content-Length: %d\r\n", size)))
-        return false;
+    auto contentLength = ck_string::format("Content-Length: %d\r\n", size);
+    socket.send(contentLength.c_str(), contentLength.length());
 
-    if(!_send_string(socket, "\r\n"))
-        return false;
+    ck_string newLine("\r\n");
+    socket.send(newLine.c_str(), newLine.length());
 
-    if(!_send_data(socket, chunk, size))
-        return false;
+    socket.send(chunk, size);
 
-    if(!_send_string(socket, "\r\n"))
-        return false;
-
-    return true;
+    socket.send(newLine.c_str(), newLine.length());
 }
 
-bool server_response::write_part_finalizer(cppkit::ck_stream_io& socket, const cppkit::ck_string& boundary)
+void server_response::write_part_finalizer(cppkit::ck_stream_io& socket, const cppkit::ck_string& boundary)
 {
-    return _send_string(socket, ck_string::format("--%s--\r\n", boundary.c_str()));
+    auto finalizerLine = ck_string::format("--%s--\r\n", boundary.c_str());
+    socket.send(finalizerLine.c_str(), finalizerLine.length());
 }
 
-ck_string server_response::_get_status_message(status_code sc)
+ck_string server_response::_get_status_message(status_code sc) const
 {
     switch(sc)
     {
@@ -324,29 +307,16 @@ bool server_response::_write_header(ck_stream_io& socket)
                                                  timeString.c_str(),
                                                  _contentType.c_str());
 
-    for( auto i = _additionalHeaders.begin(); i != _additionalHeaders.end(); i++ )
+    for( auto h : _additionalHeaders )
     {
-        responseHeader += ck_string::format("%s: %s\r\n", (*i).first.c_str(), (*i).second.c_str());
+        responseHeader += ck_string::format("%s: %s\r\n",h.first.c_str(), h.second.c_str());
     }
 
     responseHeader += ck_string::format("\r\n");
 
-    if(!_send_string(socket, responseHeader))
-        return false;
+    socket.send(responseHeader.c_str(), responseHeader.length());
 
     _headerWritten = true;
 
     return true;
-}
-
-bool server_response::_send_string(ck_stream_io& socket, const ck_string& line)
-{
-    return _send_data(socket, line.c_str(), line.size());
-}
-
-bool server_response::_send_data(ck_stream_io& socket, const void* data, size_t dataLen)
-{
-    const ssize_t bytesSent = socket.send(data, dataLen);
-
-    return socket.valid() && bytesSent == (ssize_t)dataLen;
 }

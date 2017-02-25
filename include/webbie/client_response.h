@@ -94,7 +94,6 @@ private:
 
     void _add_header(const cppkit::ck_string& name, const cppkit::ck_string& value);
 
-    bool _receive_data(cppkit::ck_stream_io& socket, void* data, size_t dataLen);
     void _clean_socket(cppkit::ck_stream_io& socket, char** writer);
     void _read_header_line(cppkit::ck_stream_io& socket, char* writer, bool firstLine);
     bool _add_line(std::list<cppkit::ck_string>& lines, const cppkit::ck_string& line);

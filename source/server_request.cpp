@@ -148,20 +148,20 @@ bool server_request::is_delete_request() const
 
 int server_request::get_method() const
 {
-    ck_string method;
-    if( get_header( "method", method ) )
-        return method_type( method );
-
-    CK_STHROW(webbie_exception, ("Request has no method."));
+    auto h = get_header("method");
+    if(h.is_null())
+        CK_STHROW(webbie_exception, ("request has no method."));
+    
+    return method_type(h.value());
 }
 
 uri server_request::get_uri() const
 {
-    ck_string u;
-    if( get_header( "uri", u ) )
-        return uri( u );
+    auto h = get_header("uri");
+    if(h.is_null())
+        CK_STHROW(webbie_exception, ("request has no uri."));
 
-    CK_STHROW(webbie_exception, ("Request has no uri."));
+    return uri(h.value());
 }
 
 ck_string server_request::get_content_type() const
@@ -174,23 +174,18 @@ void server_request::_set_header(const ck_string& name, const ck_string& value)
     const ck_string adjName = adjust_header_name(name);
     const ck_string adjValue = adjust_header_value(value);
 
-    ck_string val;
-    if( get_header( adjName, val ) )
-        _headerParts.erase( adjName );
-
-    _headerParts.insert( make_pair( (string)adjName, adjValue ) );
+    _headerParts[adjName.to_std_string()] = adjValue;
 }
 
-bool server_request::get_header( const ck_string& key, ck_string& val ) const
+ck_nullable<ck_string> server_request::get_header( const cppkit::ck_string& key ) const
 {
+    ck_nullable<ck_string> result;
+
     auto found = _headerParts.find( key.to_lower() );
     if( found != _headerParts.end() )
-    {
-        val = (*found).second;
-        return true;
-    }
+        result.set_value(found->second);
 
-    return false;
+    return result;
 }
 
 map<string,ck_string> server_request::get_headers() const
@@ -213,13 +208,6 @@ map<string,ck_string> server_request::get_post_vars() const
     return _postVars;
 }
 
-bool server_request::_receive_data(ck_stream_io& socket, void* data, size_t dataLen)
-{
-    const ssize_t bytesSent = socket.recv(data, dataLen);
-
-    return socket.valid() && bytesSent == (ssize_t)dataLen;
-}
-
 void server_request::_clean_socket(ck_stream_io& socket, char** writer)
 {
     if(!socket.valid())
@@ -230,8 +218,7 @@ void server_request::_clean_socket(ck_stream_io& socket, char** writer)
     // Clear junk off the socket
     while(true)
     {
-        if(!_receive_data(socket, tempBuffer, 1))
-            CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
+        socket.recv(tempBuffer, 1);
 
         if(!ck_string::is_space(tempBuffer[0]))
         {
@@ -250,8 +237,7 @@ void server_request::_read_header_line(ck_stream_io& socket, char* writer, bool 
     // Get initial header line
     while(!lineDone && bytesReadThisLine + 1 < MAX_HEADER_LINE)
     {
-        if(!_receive_data(socket, writer, 1))
-            CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
+        socket.recv(writer, 1);
 
         ++bytesReadThisLine;
 
@@ -304,12 +290,11 @@ void server_request::_process_request_lines(const list<ck_string>& requestLines)
 
 void server_request::_process_body(ck_stream_io& socket)
 {
-    ck_string contentLengthString;
-    bool foundContentLength = get_header("Content-Length", contentLengthString);
+    auto cl = get_header("Content-Length");
 
-    if(foundContentLength)
+    if(!cl.is_null())
     {
-        contentLengthString = contentLengthString.strip();
+        auto contentLengthString = cl.value().strip();
         uint32_t contentLength = contentLengthString.to_uint32();
 
         if(!contentLength)
@@ -319,17 +304,15 @@ void server_request::_process_body(ck_stream_io& socket)
 
         unsigned char* buffer = _body.extend_data(contentLength).get_ptr();
 
-        if(!_receive_data(socket, buffer, contentLength))
-            CK_STHROW(webbie_exception, ("Failed to read data from socket->"));
+        socket.recv(buffer, contentLength);
 
-        ck_string contentType;
-        bool foundContentType = get_header("Content-Type", contentType);
+        auto ct = get_header("Content-Type");
 
-        if(foundContentType)
+        if(!ct.is_null())
         {
-            _contentType = contentType.lstrip();
+            _contentType = ct.value().lstrip();
 
-            if(contentType.contains("x-www-form-urlencoded"))
+            if(_contentType.contains("x-www-form-urlencoded"))
             {
                 ck_string rawBody((char*)_body.map_data().get_ptr(), (int)_body.size_data());
 

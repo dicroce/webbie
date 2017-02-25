@@ -42,6 +42,8 @@
 #include "webbie/uri.h"
 #include "webbie/methods.h"
 
+class client_request_test;
+
 namespace webbie
 {
 
@@ -53,6 +55,8 @@ const cppkit::ck_string patch_request = "PATCH";
 
 class client_request
 {
+    friend class ::client_request_test;
+
 public:
     CK_API client_request( const cppkit::ck_string& host, int hostPort );
 
@@ -64,7 +68,7 @@ public:
 
     CK_API void set_method( int method );
 
-    CK_API bool write_request( cppkit::ck_stream_io& socket ) const;
+    CK_API void write_request( cppkit::ck_stream_io& socket ) const;
 
     CK_API void set_accept_type( const cppkit::ck_string& acceptType );
 
