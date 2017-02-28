@@ -219,6 +219,8 @@ void server_request::_clean_socket(ck_stream_io& socket, char** writer)
     while(true)
     {
         socket.recv(tempBuffer, 1);
+        if( !socket.valid() )
+            CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
         if(!ck_string::is_space(tempBuffer[0]))
         {
@@ -238,6 +240,8 @@ void server_request::_read_header_line(ck_stream_io& socket, char* writer, bool 
     while(!lineDone && bytesReadThisLine + 1 < MAX_HEADER_LINE)
     {
         socket.recv(writer, 1);
+        if( !socket.valid() )
+            CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
         ++bytesReadThisLine;
 
@@ -305,6 +309,8 @@ void server_request::_process_body(ck_stream_io& socket)
         unsigned char* buffer = _body.extend_data(contentLength).get_ptr();
 
         socket.recv(buffer, contentLength);
+        if( !socket.valid() )
+            CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
         auto ct = get_header("Content-Type");
 

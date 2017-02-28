@@ -177,9 +177,15 @@ void server_response::write_response(ck_stream_io& socket)
     responseHeader += ck_string::format("\r\n");
 
     socket.send(responseHeader.c_str(), responseHeader.length());
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
     if(_body.size() > 0)
+    {
         socket.send(&_body[0], _body.size());
+        if( !socket.valid() )
+            CK_STHROW( webbie_io_exception, ("Socket invalid."));
+    }
 }
 
 void server_response::write_chunk(ck_stream_io& socket, size_t sizeChunk, const void* bits)
@@ -189,17 +195,25 @@ void server_response::write_chunk(ck_stream_io& socket, size_t sizeChunk, const 
 
     auto chunkSizeString = ck_string::format("%s;\r\n", ck_string::from_uint((unsigned int)sizeChunk, 16).c_str());
     socket.send(chunkSizeString.c_str(), chunkSizeString.length());
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
     socket.send(bits, sizeChunk);
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
     ck_string newLine("\r\n");
     socket.send(newLine.c_str(), newLine.length());
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 }
 
 void server_response::write_chunk_finalizer(ck_stream_io& socket)
 {
     ck_string finalizer("0\r\n\r\n");
     socket.send(finalizer.c_str(), finalizer.length());
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 }
 
 void server_response::write_part(cppkit::ck_stream_io& socket,
@@ -210,6 +224,8 @@ void server_response::write_part(cppkit::ck_stream_io& socket,
 {
     auto boundaryLine = ck_string::format("--%s\r\n", boundary.c_str());
     socket.send(boundaryLine.c_str(), boundaryLine.length());
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
     for( auto i = partHeaders.begin(); i != partHeaders.end(); i++ )
     {
@@ -218,23 +234,35 @@ void server_response::write_part(cppkit::ck_stream_io& socket,
         ck_string headerLine = ck_string::format("%s: %s\r\n",headerName.c_str(),headerValue.c_str());
 
         socket.send(headerLine.c_str(), headerLine.length());
+        if( !socket.valid() )
+            CK_STHROW( webbie_io_exception, ("Socket invalid."));
     }
 
     auto contentLength = ck_string::format("Content-Length: %d\r\n", size);
     socket.send(contentLength.c_str(), contentLength.length());
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
     ck_string newLine("\r\n");
     socket.send(newLine.c_str(), newLine.length());
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
     socket.send(chunk, size);
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
     socket.send(newLine.c_str(), newLine.length());
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 }
 
 void server_response::write_part_finalizer(cppkit::ck_stream_io& socket, const cppkit::ck_string& boundary)
 {
     auto finalizerLine = ck_string::format("--%s--\r\n", boundary.c_str());
     socket.send(finalizerLine.c_str(), finalizerLine.length());
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 }
 
 ck_string server_response::_get_status_message(status_code sc) const
@@ -315,6 +343,8 @@ bool server_response::_write_header(ck_stream_io& socket)
     responseHeader += ck_string::format("\r\n");
 
     socket.send(responseHeader.c_str(), responseHeader.length());
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
     _headerWritten = true;
 

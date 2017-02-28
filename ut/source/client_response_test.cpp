@@ -1,527 +1,379 @@
 
-#include "ClientSideResponseTest.h"
-#include "XSDK/XHash.h"
-#include "XSDK/TimeUtils.h"
-#include "XSDK/XSocket.h"
-#include "Webby/ClientSideRequest.h"
-#include "Webby/ClientSideResponse.h"
-#include "Webby/ServerSideRequest.h"
-#include "Webby/ServerSideResponse.h"
-#include "Webby/WebbyException.h"
+#include "client_response_test.h"
+#include "webbie/client_request.h"
+#include "webbie/client_response.h"
+#include "webbie/server_request.h"
+#include "webbie/server_response.h"
+#include "webbie/webbie_exception.h"
+#include "cppkit/os/ck_time_utils.h"
+#include "cppkit/ck_socket.h"
+#include <thread>
 
 using namespace std;
-using namespace XSDK;
-using namespace WEBBY;
-using namespace XSDK;
+using namespace cppkit;
+using namespace webbie;
 
-#ifdef WIN32
-#define SLEEP(a) Sleep((a*1000))
-#else
-#define SLEEP(a) sleep(a)
-#endif
+REGISTER_TEST_FIXTURE(client_response_test);
 
-REGISTER_TEST_FIXTURE(ClientSideResponseTest);
-
-void ClientSideResponseTest::setup()
+void client_response_test::setup()
 {
 }
 
 
-void ClientSideResponseTest::teardown()
+void client_response_test::teardown()
 {
 }
 
-bool ClientSideResponseTest::MyChunkHandler(void* context, XIRef<XSDK::XMemory> chunk, const ClientSideResponse& response)
+void client_response_test::test_default_constructor()
 {
-    ClientSideResponseTest* testObject = (ClientSideResponseTest*)context;
-
-    const unsigned char* chunkBuffer = chunk->Map();
-
-    testObject->_total += *chunkBuffer;
-
-    return true;
+    client_response response;
 }
 
-bool ClientSideResponseTest::MyPartHandler(void* context, XIRef<XSDK::XMemory> chunk, const XSDK::XHash<XSDK::XString>& partHeaders, const ClientSideResponse& response )
+void client_response_test::test_copy_constructor()
 {
-    ClientSideResponseTest* testObject = (ClientSideResponseTest*)context;
-
-    const unsigned char* chunkBuffer = chunk->Map();
-
-    testObject->_total += *chunkBuffer;
-
-    return true;
 }
 
-void* ClientSideResponseTest::EntryPoint()
+void client_response_test::test_assignment_operator()
 {
-    if(_testNum == 0)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2290);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        XString body = ssRequest.GetBodyAsString();
-
-        ServerSideResponse ssResponse;
-        ssResponse.SetBody(body);
-        UT_ASSERT(ssResponse.WriteResponse(clientSocket));
-
-        clientSocket->Shutdown(SOCKET_SHUT_FLAGS);
-        clientSocket->Close();
-
-        socket->Shutdown(SOCKET_SHUT_FLAGS);
-        socket->Close();
-    }
-    else if(_testNum == 1)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2292);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        ServerSideResponse ssResponse;
-        ssResponse.SetContentType("application/x-rtsp-tunnelled");
-
-        XIRef<XMemory> chunk = new XMemory;
-        unsigned char* buf = &chunk->Extend(1);
-
-        for(int i = 0; i < 10; i++)
-        {
-            *buf = i;
-            ssResponse.WriteChunk(clientSocket, chunk);
-        }
-        UT_ASSERT(ssResponse.WriteChunkFinalizer(clientSocket));
-
-        clientSocket->Shutdown(SOCKET_SHUT_FLAGS);
-        clientSocket->Close();
-
-        socket->Shutdown(SOCKET_SHUT_FLAGS);
-        socket->Close();
-    }
-    else if(_testNum == 2)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2294);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        XString body = ssRequest.GetBodyAsString();
-
-        XString cont = "HTTP/1.1 100 Continue\r\n\r\n";
-        clientSocket->Send(cont.c_str(), cont.length());
-
-        ServerSideResponse ssResponse;
-        ssResponse.SetBody(body);
-        UT_ASSERT(ssResponse.WriteResponse(clientSocket));
-
-        clientSocket->Shutdown(SOCKET_SHUT_FLAGS);
-        clientSocket->Close();
-
-        socket->Shutdown(SOCKET_SHUT_FLAGS);
-        socket->Close();
-    }
-    else if(_testNum == 3)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2296);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        ServerSideResponse ssResponse;
-        ssResponse.SetContentType("application/x-rtsp-tunnelled");
-
-        XIRef<XMemory> chunk = new XMemory;
-        unsigned char* buf = &chunk->Extend(1);
-
-        for(int i = 0; i < 10; i++)
-        {
-            *buf = i;
-            ssResponse.WriteChunk(clientSocket, chunk);
-            x_sleep(1);
-        }
-        ssResponse.WriteChunkFinalizer(clientSocket);
-
-//      clientSocket->Shutdown(SOCKET_SHUT_FLAGS);
-//      clientSocket->Close();
-
-//      socket->Shutdown(SOCKET_SHUT_FLAGS);
-//      socket->Close();
-    }
-    else if(_testNum == 4)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2298);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        ServerSideResponse ssResponse;
-        ssResponse.SetContentType("multipart/x-mixed-replace; boundary=\"foo\"");
-
-        UT_ASSERT(ssResponse.WriteResponse(clientSocket));
-
-        XIRef<XMemory> chunk = new XMemory;
-        unsigned char* buf = &chunk->Extend(1);
-
-        for(int i = 0; i < 10; i++)
-        {
-            *buf = i;
-            XHash<XString> headers;
-            headers.Add("Content-Type", "image/jpeg");
-            UT_ASSERT(ssResponse.WritePart(clientSocket,
-                          "foo",
-                          headers,
-                          chunk));
-            x_sleep(1);
-        }
-        UT_ASSERT(ssResponse.WritePartFinalizer("foo", clientSocket));
-    }
-    else if(_testNum == 5)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2300);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        ServerSideResponse ssResponse;
-        ssResponse.AddAdditionalHeader("HeaderWithColon", "This header has a : in it.");
-
-        UT_ASSERT(ssResponse.WriteResponse(clientSocket));
-    }
-    else if(_testNum == 6)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2302);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        //Note: We don't use ServerSideResponse here because ServerSideResponse does not support
-        //multiple header values associated with the same key. If this is needed, we could add it, but
-        //for now we just return a manually constructed response.
-
-        XString response = "HTTP/1.1 200 OK\r\nDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nkey: val 2\r\n\r\n";
-        clientSocket->Send(response.c_str(), response.length());
-    }
-    else if(_testNum == 7)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2304);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        XString response = "HTTP/1.1 200 OK\r\n Date: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\nvalue:key\r\n\r\n";
-        clientSocket->Send(response.c_str(), response.length());
-    }
-    else if(_testNum == 8)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2306);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        XString response = "HTTP/1.1 200 OK\r\n\tDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\nvalue:key\r\n\r\n";
-        clientSocket->Send(response.c_str(), response.length());
-    }
-    else if(_testNum == 9)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2308);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        XString response = "HTTP/1.1 200 OK\r\nDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\n value:key\r\n\r\n";
-        clientSocket->Send(response.c_str(), response.length());
-    }
-    else if(_testNum == 10)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2310);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        XString response = "HTTP/1.1 200 OK\r\nDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\n\tvalue:key\r\n\r\n";
-        clientSocket->Send(response.c_str(), response.length());
-    }
-    else if(_testNum == 11)
-    {
-        XRef<XSocket> socket = new XSocket;
-        socket->Bind(2312);
-        socket->Listen();
-
-        XRef<XSocket> clientSocket = socket->Accept();
-
-        ServerSideRequest ssRequest;
-        ssRequest.ReadRequest(clientSocket);
-
-        XString response = "HTTP/1.1 200 OK\r\nDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\nvalue:key\r\n\r\n";
-        clientSocket->Send(response.c_str(), response.length());
-    }
-
-    return NULL;
 }
 
-void ClientSideResponseTest::TestDefaultConstructor()
+void client_response_test::test_receive_response()
 {
-    ClientSideResponse response;
-}
+    int port = UT_NEXT_PORT();
 
-void ClientSideResponseTest::TestCopyConstructor()
-{
-    ClientSideResponse ra;
-    ClientSideResponse rb(ra);
-}
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
+        auto clientSocket = socket.accept();
 
-void ClientSideResponseTest::TestAssignmentOperator()
-{
-    ClientSideResponse ra;
-    ClientSideResponse rb = ra;
-}
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
 
-void ClientSideResponseTest::TestReceiveResponse()
-{
-    _testNum = 0;
+        auto body = ssRequest.get_body_as_string();
 
-    Start();
+        server_response ssResponse;
+        ssResponse.set_body(body);
+        UT_ASSERT_NO_THROW(ssResponse.write_response(clientSocket));
 
-    SLEEP(1);
+        clientSocket.close();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2290);
+        socket.close();
+    });
+    th.detach();
 
-    XString message = "Hello, Webby!";
+    ck_usleep(250000);
 
-    ClientSideRequest request;
-    request.SetRequestType(kWebbyPOSTRequest);
-    request.SetBody((unsigned char*)message.c_str(), message.length());
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
 
-    UT_ASSERT(request.WriteRequest(socket));
+    ck_string message = "Hello, Webby!";
 
-    ClientSideResponse response;
-    response.ReadResponse(socket);
+    client_request request("127.0.0.1", port);
 
-    XString responseBody = response.GetBodyAsString();
+    request.set_method(METHOD_POST);
+    request.set_body(ck_byte_ptr(message.c_str(), message.length()));
+
+    UT_ASSERT_NO_THROW(request.write_request(socket));
+
+    client_response response;
+    response.read_response(socket);
+
+    auto responseBody = response.get_body_as_string();
 
     UT_ASSERT(responseBody == "Hello, Webby!");
-
-    socket->Shutdown(SOCKET_SHUT_FLAGS);
-    socket->Close();
 }
 
-void ClientSideResponseTest::TestStreaming()
+void client_response_test::test_streaming()
 {
-    _testNum = 1;
-    _total = 0;
+    int port = UT_NEXT_PORT();
 
-    Start();
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
-    SLEEP(1);
+        auto clientSocket = socket.accept();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2292);
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
 
-    XString message = "Hello, Webby!";
+        server_response ssResponse;
+        ssResponse.set_content_type("application/x-rtsp-tunnelled");
 
-    ClientSideRequest request;
-    request.SetRequestType(kWebbyPOSTRequest);
-    request.SetBody((unsigned char*)message.c_str(), message.length());
+        for(uint8_t i = 0; i < 10; ++i)
+            ssResponse.write_chunk(clientSocket, 1, &i);
+        
+        ssResponse.write_chunk_finalizer(clientSocket);
+    });
+    th.detach();
 
-    UT_ASSERT(request.WriteRequest(socket));
+    ck_usleep(250000);
 
-    ClientSideResponse response;
-    response.RegisterChunkHandler(MyChunkHandler, this, true);
-    response.ReadResponse(socket);
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
+
+    ck_string message = "Hello, Webby!";
+
+    client_request request("127.0.0.1", port);
+    request.set_method(METHOD_POST);
+    request.set_body(message);
+
+    request.write_request(socket);
+
+    uint8_t sum = 0;
+
+    client_response response;
+    response.register_chunk_callback([&](const vector<uint8_t>& chunk, const client_response& response){
+        sum += chunk[0];
+    },
+    true);
+    response.read_response(socket);
 
     // For this test the server sends back 10 chunks, each 1 byte long... Containing the values
     // 9 down to 0. The sum of 0 .. 9 == 45. Our callback just sums them, so at this point our
     // _total should == 45.
-    UT_ASSERT(_total == 45);
-
-    socket->Shutdown(SOCKET_SHUT_FLAGS);
-    socket->Close();
+    UT_ASSERT(sum == 45);
 }
 
-void ClientSideResponseTest::Test100Continue()
+void client_response_test::test_100_continue()
 {
-    _testNum = 2;
+    int port = UT_NEXT_PORT();
 
-    Start();
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
-    SLEEP(1);
+        auto clientSocket = socket.accept();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2294);
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
 
-    XString message = "Hello, Webby!";
+        auto body = ssRequest.get_body_as_string();
 
-    ClientSideRequest request;
-    request.SetRequestType(kWebbyPOSTRequest);
-    request.SetBody((unsigned char*)message.c_str(), message.length());
+        ck_string cont = "HTTP/1.1 100 Continue\r\n\r\n";
+        clientSocket.send(cont.c_str(), cont.length());
 
-    UT_ASSERT(request.WriteRequest(socket));
+        server_response ssResponse;
+        ssResponse.set_body(body);
+        ssResponse.write_response(clientSocket);
+    });
+    th.detach();
 
-    ClientSideResponse response;
-    response.ReadResponse(socket);
+    ck_usleep(250000);
 
-    XString responseBody = response.GetBodyAsString();
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
+
+    ck_string message = "Hello, Webby!";
+
+    client_request request("127.0.0.1", port);
+    request.set_method(METHOD_POST);
+    request.set_body(message);
+
+    request.write_request(socket);
+
+    client_response response;
+    response.read_response(socket);
+
+    auto responseBody = response.get_body_as_string();
 
     UT_ASSERT(responseBody == "Hello, Webby!");
-
-    socket->Shutdown(SOCKET_SHUT_FLAGS);
-    socket->Close();
 }
 
-void ClientSideResponseTest::TestInterruptedStreaming()
+void client_response_test::test_interrupted_streaming()
 {
-    _testNum = 3;
-    _total = 0;
+    int port = UT_NEXT_PORT();
 
-    Start();
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
-    SLEEP(1);
+        auto clientSocket = socket.accept();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2296);
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
 
-    XString message = "Hello, Webby!";
+        server_response ssResponse;
+        ssResponse.set_content_type("application/x-rtsp-tunnelled");
 
-    ClientSideRequest request;
-    request.SetRequestType(kWebbyPOSTRequest);
-    request.SetBody((unsigned char*)message.c_str(), message.length());
+        for(uint8_t i = 0; i < 10; ++i)
+        {
+            ssResponse.write_chunk(clientSocket, 1, &i);
+            ck_sleep(1);
+        }
 
-    request.WriteRequest(socket);
+        ssResponse.write_chunk_finalizer(clientSocket);
+    });
+    th.detach();
 
-    SocketCloser socketCloser(socket, 5);
-    socketCloser.Start();
+    ck_usleep(250000);
 
-    ClientSideResponse response;
-    response.RegisterChunkHandler(MyChunkHandler, this, true);
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
 
-    UT_ASSERT_THROWS(response.ReadResponse(socket), WebbyException);
+    ck_string message = "Hello, Webby!";
 
-    socketCloser.Join();
+    client_request request("127.0.0.1", port);
+    request.set_method(METHOD_POST);
+    request.set_body(message);
+
+    request.write_request(socket);
+
+    auto thInt = std::thread([&](){
+        ck_sleep(5);
+        socket.close();
+    });
+    thInt.detach();
+
+    uint8_t sum = 0;
+
+    client_response response;
+    response.register_chunk_callback([&](const vector<uint8_t>& chunk, const client_response& response){
+        sum += chunk[0];
+    },
+    true);
+
+    UT_ASSERT_THROWS(response.read_response(socket), webbie_io_exception);
 
     // For this test the server sends back 10 chunks, each 1 byte long... Containing the values
     // 9 down to 0. But, we interrupt it 5 seconds in... So, the total here is probably 10 (0+1+2+3+4), but
     // the safer test (with less race conditions) is to just test that the _total is less than the 45 it would
     // be if it had run to completion.
-    UT_ASSERT(_total < 45);
+    UT_ASSERT(sum < 45);
 }
 
-void ClientSideResponseTest::TestMultiPart()
+void client_response_test::test_multi_part()
 {
-    _testNum = 4;
-    _total = 0;
+    int port = UT_NEXT_PORT();
 
-    Start();
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
-    SLEEP(1);
+        auto clientSocket = socket.accept();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2298);
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
 
-    XString message = "Hello, Webby!";
+        server_response ssResponse;
+        ssResponse.set_content_type("multipart/x-mixed-replace; boundary=\"foo\"");
 
-    ClientSideRequest request;
-    request.SetRequestType(kWebbyPOSTRequest);
-    request.SetBody((unsigned char*)message.c_str(), message.length());
+        ssResponse.write_response(clientSocket);
 
-    UT_ASSERT(request.WriteRequest(socket));
+        for(uint8_t i = 0; i < 10; ++i)
+        {
+            map<string,ck_string> headers;
+            headers.insert(make_pair("Content-Type", "image/jpeg"));
+            ssResponse.write_part(clientSocket, "foo", headers, &i, 1);
+            ck_sleep(1);
+        }
 
-    ClientSideResponse response;
-    response.RegisterPartHandler(MyPartHandler, this);
-    response.ReadResponse(socket);
+        ssResponse.write_part_finalizer( clientSocket, "foo");
+    });
+    th.detach();
 
-    UT_ASSERT(_total == 45);
+    ck_usleep(250000);
+
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
+
+    ck_string message = "Hello, Webby!";
+
+    client_request request("127.0.0.1", port);
+    request.set_method(METHOD_POST);
+    request.set_body(message);
+
+    request.write_request(socket);
+
+    uint8_t sum = 0;
+
+    client_response response;
+    response.register_part_callback([&](const std::vector<uint8_t>& chunk, const std::map<std::string, cppkit::ck_string>& headers, const client_response& response){
+        sum += chunk[0];
+    });
+
+    response.read_response(socket);
+
+    UT_ASSERT(sum == 45);
 }
 
-void ClientSideResponseTest::TestColonsInHeaders()
+void client_response_test::TestColonsInHeaders()
 {
-    _testNum = 5;
-    _total = 0;
+    int port = UT_NEXT_PORT();
 
-    Start();
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
-    SLEEP(1);
+        ck_socket clientSocket = socket.accept();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2300);
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
 
-    ClientSideRequest request;
-    UT_ASSERT(request.WriteRequest(socket));
+        server_response ssResponse;
+        ssResponse.add_additional_header("HeaderWithColon", "This header has a : in it.");
 
-    ClientSideResponse response;
-    response.ReadResponse(socket);
+        ssResponse.write_response(clientSocket);
+    });
+    th.detach();
 
-    XString headerValue = response.GetHeader("HeaderWithColon");
+    ck_usleep(250000);
 
-    UT_ASSERT(headerValue.Contains("This header has a : in it."));
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
+
+    client_request request("127.0.0.1", port);
+    request.write_request(socket);
+
+    client_response response;
+    response.read_response(socket);
+
+    ck_string headerValue = response.get_header("HeaderWithColon");
+
+    UT_ASSERT(headerValue.contains("This header has a : in it."));
 }
 
-void ClientSideResponseTest::TestMultipleHeadersWithSameKey()
+void client_response_test::TestMultipleHeadersWithSameKey()
 {
-    _testNum = 6;
-    _total = 0;
+    int port = UT_NEXT_PORT();
 
-    Start();
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
-    SLEEP(1);
+        ck_socket clientSocket = socket.accept();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2302);
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
 
-    ClientSideRequest request;
-    UT_ASSERT(request.WriteRequest(socket));
+        //Note: We don't use server_response here because server_response does not support
+        //multiple header values associated with the same key. If this is needed, we could add it, but
+        //for now we just return a manually constructed response.
 
-    ClientSideResponse response;
-    response.ReadResponse(socket);
+        ck_string response = "HTTP/1.1 200 OK\r\nDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nkey: val 2\r\n\r\n";
+        clientSocket.send(response.c_str(), response.length());
+    });
+    th.detach();
 
-    vector<XString> matchingHeaders = response.GetAllMatchingHeaders("key");
+    ck_usleep(250000);
+
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
+
+    client_request request("127.0.0.1", port);
+    request.write_request(socket);
+
+    client_response response;
+    response.read_response(socket);
+
+    vector<ck_string> matchingHeaders = response.get_all_matching_headers("key");
 
     int numHeaders = matchingHeaders.size();
 
@@ -531,119 +383,189 @@ void ClientSideResponseTest::TestMultipleHeadersWithSameKey()
     UT_ASSERT(matchingHeaders[1] == "val 2");
 }
 
-void ClientSideResponseTest::TestSpaceAtHeaderStart()
+void client_response_test::TestSpaceAtHeaderStart()
 {
-    _testNum = 7;
-    _total = 0;
-    Start();
-    SLEEP(1);
+    int port = UT_NEXT_PORT();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2304);
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
-    ClientSideRequest request;
-    UT_ASSERT(request.WriteRequest(socket));
+        ck_socket clientSocket = socket.accept();
 
-    ClientSideResponse response;
-    UT_ASSERT_THROWS(response.ReadResponse(socket), WebbyException);
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
+
+        ck_string response = "HTTP/1.1 200 OK\r\n Date: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\nvalue:key\r\n\r\n";
+        clientSocket.send(response.c_str(), response.length());
+    });
+    th.detach();
+
+    ck_usleep(250000);
+
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
+
+    client_request request("127.0.0.1", port);
+    request.write_request(socket);
+
+    client_response response;
+    UT_ASSERT_THROWS(response.read_response(socket), webbie_exception);
 }
 
-void ClientSideResponseTest::TestTabAtHeaderStart()
+void client_response_test::TestTabAtHeaderStart()
 {
-    _testNum = 8;
-    _total = 0;
-    Start();
-    SLEEP(1);
+    int port = UT_NEXT_PORT();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2306);
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
-    ClientSideRequest request;
-    UT_ASSERT(request.WriteRequest(socket));
+        ck_socket clientSocket = socket.accept();
 
-    ClientSideResponse response;
-    UT_ASSERT_THROWS(response.ReadResponse(socket), WebbyException);
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
+
+        ck_string response = "HTTP/1.1 200 OK\r\n\tDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\nvalue:key\r\n\r\n";
+        clientSocket.send(response.c_str(), response.length());
+    });
+    th.detach();
+
+    ck_usleep(250000);
+
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
+
+    client_request request("127.0.0.1", port);
+    request.write_request(socket);
+
+    client_response response;
+    UT_ASSERT_THROWS(response.read_response(socket), webbie_exception);
 }
 
-void ClientSideResponseTest::TestSpaceAtHeaderLine()
+void client_response_test::TestSpaceAtHeaderLine()
 {
-    _testNum = 9;
-    _total = 0;
-    Start();
-    SLEEP(1);
+    int port = UT_NEXT_PORT();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2308);
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
-    ClientSideRequest request;
-    UT_ASSERT(request.WriteRequest(socket));
+        ck_socket clientSocket = socket.accept();
 
-    ClientSideResponse response;
-    response.ReadResponse(socket);
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
 
-    vector<XString> matchingHeaders = response.GetAllMatchingHeaders("key");
+        ck_string response = "HTTP/1.1 200 OK\r\nDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\n value:key\r\n\r\n";
+        clientSocket.send(response.c_str(), response.length());
+    });
+    th.detach();
+
+    ck_usleep(250000);
+
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
+
+    client_request request("127.0.0.1", port);
+    request.write_request(socket);
+
+    client_response response;
+    response.read_response(socket);
+
+    vector<ck_string> matchingHeaders = response.get_all_matching_headers("key");
     UT_ASSERT(matchingHeaders.size() == 1);
     UT_ASSERT(matchingHeaders[0] == "val 1");
 
-    matchingHeaders = response.GetAllMatchingHeaders("hole");
+    matchingHeaders = response.get_all_matching_headers("hole");
     UT_ASSERT(matchingHeaders.size() == 1);
     UT_ASSERT(matchingHeaders[0] == "val 2\r\n value:key");
 
-    UT_ASSERT(response.GetAllMatchingHeaders("value").empty());
+    UT_ASSERT(response.get_all_matching_headers("value").empty());
 }
 
-void ClientSideResponseTest::TestTabAtHeaderLine()
+void client_response_test::TestTabAtHeaderLine()
 {
-    _testNum = 10;
-    _total = 0;
-    Start();
-    SLEEP(1);
+    int port = UT_NEXT_PORT();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2310);
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
-    ClientSideRequest request;
-    UT_ASSERT(request.WriteRequest(socket));
+        ck_socket clientSocket = socket.accept();
 
-    ClientSideResponse response;
-    response.ReadResponse(socket);
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
 
-    vector<XString> matchingHeaders = response.GetAllMatchingHeaders("key");
+        ck_string response = "HTTP/1.1 200 OK\r\nDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\n\tvalue:key\r\n\r\n";
+        clientSocket.send(response.c_str(), response.length());
+    });
+    th.detach();
+
+    ck_usleep(250000);
+
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
+
+    client_request request("127.0.0.1", port);
+    request.write_request(socket);
+
+    client_response response;
+    response.read_response(socket);
+
+    vector<ck_string> matchingHeaders = response.get_all_matching_headers("key");
     UT_ASSERT(matchingHeaders.size() == 1);
     UT_ASSERT(matchingHeaders[0] == "val 1");
 
-    matchingHeaders = response.GetAllMatchingHeaders("hole");
+    matchingHeaders = response.get_all_matching_headers("hole");
     UT_ASSERT(matchingHeaders.size() == 1);
     UT_ASSERT(matchingHeaders[0] == "val 2\r\n\tvalue:key");
 
-    UT_ASSERT(response.GetAllMatchingHeaders("value").empty());
+    UT_ASSERT(response.get_all_matching_headers("value").empty());
 }
 
-void ClientSideResponseTest::TestMultipleKeys()
+void client_response_test::TestMultipleKeys()
 {
-    _testNum = 11;
-    _total = 0;
-    Start();
-    SLEEP(1);
+    int port = UT_NEXT_PORT();
 
-    XRef<XSocket> socket = new XSocket;
-    socket->Connect("127.0.0.1", 2312);
+    auto th = thread([&](){
+        ck_socket socket;
+        socket.bind(port);
+        socket.listen();
 
-    ClientSideRequest request;
-    UT_ASSERT(request.WriteRequest(socket));
+        ck_socket clientSocket = socket.accept();
 
-    ClientSideResponse response;
-    response.ReadResponse(socket);
+        server_request ssRequest;
+        ssRequest.read_request(clientSocket);
 
-    vector<XString> matchingHeaders = response.GetAllMatchingHeaders("key");
+        ck_string response = "HTTP/1.1 200 OK\r\nDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\nvalue:key\r\n\r\n";
+        clientSocket.send(response.c_str(), response.length());
+    });
+    th.detach();
+
+    ck_usleep(250000);
+
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
+
+    client_request request("127.0.0.1", port);
+    request.write_request(socket);
+
+    client_response response;
+    response.read_response(socket);
+
+    vector<ck_string> matchingHeaders = response.get_all_matching_headers("key");
     UT_ASSERT(matchingHeaders.size() == 1);
     UT_ASSERT(matchingHeaders[0] == "val 1");
 
-    matchingHeaders = response.GetAllMatchingHeaders("hole");
+    matchingHeaders = response.get_all_matching_headers("hole");
     UT_ASSERT(matchingHeaders.size() == 1);
     UT_ASSERT(matchingHeaders[0] == "val 2");
 
-    matchingHeaders = response.GetAllMatchingHeaders("value");
+    matchingHeaders = response.get_all_matching_headers("value");
     UT_ASSERT(matchingHeaders.size() == 1);
     UT_ASSERT(matchingHeaders[0] == "key");
 }

@@ -102,12 +102,16 @@ void client_request::write_request( ck_stream_io& socket ) const
     ck_string msgHeader = _get_headers_as_string( socket );
 
     socket.send( msgHeader.c_str(), msgHeader.length() );
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
     if( (_method == METHOD_POST || _method == METHOD_PATCH || _method == METHOD_PUT) &&
         !_contentType.contains("x-www-form-urlencoded") &&
         _body.size() )
     {
         socket.send(&_body[0], _body.size());
+        if( !socket.valid() )
+            CK_STHROW( webbie_io_exception, ("Socket invalid."));
     }
 }
 

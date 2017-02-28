@@ -171,6 +171,8 @@ void client_response::_clean_socket(ck_stream_io& socket, char** writer)
     while(true)
     {
         socket.recv(tempBuffer, 1);
+        if( !socket.valid() )
+            CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
         if(!ck_string::is_space(tempBuffer[0]))
         {
@@ -190,6 +192,8 @@ void client_response::_read_header_line(ck_stream_io& socket, char* writer, bool
     while(!lineDone && (bytesReadThisLine + 1) < MAX_HEADER_LINE)
     {
         socket.recv(writer, 1);
+        if( !socket.valid() )
+            CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
         ++bytesReadThisLine;
 
@@ -202,7 +206,7 @@ void client_response::_read_header_line(ck_stream_io& socket, char* writer, bool
     if(!lineDone)
     {
         ck_string msg = firstLine ? "The HTTP initial request line exceeded our max."
-                                : "The HTTP initial request line exceeded our max.";
+                                : "The HTTP line exceeded our max.";
 
         CK_STHROW(webbie_exception, (msg));
     }
@@ -258,6 +262,8 @@ void client_response::_process_body(ck_stream_io& socket)
         {
             _bodyContents.resize( contentLength );
             socket.recv(&_bodyContents[0], contentLength);
+            if( !socket.valid() )
+                CK_STHROW( webbie_io_exception, ("Socket invalid."));
         }
     }
     else if( (found = _headerParts.find( "transfer-encoding" )) != _headerParts.end() )
@@ -372,6 +378,8 @@ void client_response::_read_chunked_body(ck_stream_io& socket)
 
             _chunk.resize( chunkLen );
             socket.recv(&_chunk[0], chunkLen);
+            if( !socket.valid() )
+                CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
             // call callback here...
             if( _chunkCallback )
@@ -433,10 +441,12 @@ void client_response::_read_multi_part(ck_stream_io& socket)
             _chunk.resize(partContentLength);
 
             socket.recv(&_chunk[0], partContentLength);
+            if( !socket.valid() )
+                CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
             // call callback here...
             if( _partCallback )
-                moreParts = _partCallback( _chunk, partHeaders, *this );
+                _partCallback( _chunk, partHeaders, *this );
 
             _read_end_of_line(socket);
         }
@@ -451,10 +461,15 @@ void client_response::_read_end_of_line(ck_stream_io& socket)
     char lineEnd[2] = {0, 0};
 
     socket.recv(&lineEnd[0], 1);
+    if( !socket.valid() )
+        CK_STHROW( webbie_io_exception, ("Socket invalid."));
 
     if(lineEnd[0] == '\r')
+    {
         socket.recv(&lineEnd[1], 1);
-
+        if( !socket.valid() )
+            CK_STHROW( webbie_io_exception, ("Socket invalid."));
+    }
     if(!_is_end_of_line(lineEnd))
         CK_STHROW(webbie_exception, ("A chunk line didn't end with appropriate terminator."));
 }

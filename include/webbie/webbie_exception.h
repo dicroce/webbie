@@ -36,6 +36,19 @@
 namespace webbie
 {
 
+/// An internal exception type used to enter io error state.
+class webbie_io_exception : public cppkit::ck_exception
+{
+public:
+    CK_API webbie_io_exception();
+
+    CK_API virtual ~webbie_io_exception() throw() {}
+
+    CK_API webbie_io_exception(const char* msg, ...);
+
+    CK_API webbie_io_exception(const cppkit::ck_string& msg);
+};
+
 /// General exception type for Webby.
 class webbie_exception : public cppkit::ck_exception
 {

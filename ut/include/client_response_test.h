@@ -1,101 +1,45 @@
-//=============================================================================
-//Copyright (c) 2009 Pelco. All rights reserved.
-//
-// This file contains trade secrets of Pelco.  No part may be reproduced or
-// transmitted in any form by any means or for any purpose without the express
-// written permission of Pelco.
-//
-// $File: ClientSideRequestTest.h $
-// $Revision:$
-// $Date:$
-// $Author: Matt Spaulding $
-//=============================================================================
-
-
-#ifndef _WEBBY_CLIENTSIDE_REQUEST_TEST_H_
-#define _WEBBY_CLIENTSIDE_REQUEST_TEST_H_
 
 #include "framework.h"
-#include "XSDK/XTaskBase.h"
-#include "XSDK/XMemory.h"
-#include "XSDK/XRef.h"
-#include "XSDK/XSocket.h"
-#include "XSDK/TimeUtils.h"
 
-namespace WEBBY
-{
-class ClientSideResponse;
-}
-
-class SocketCloser : public XSDK::XTaskBase
+class client_response_test : public test_fixture
 {
 public:
-    SocketCloser(XRef<XSDK::XSocket> socket, int delay) :
-        _socket(socket),
-        _delay(delay)
-    {}
-
-    ~SocketCloser() throw() {}
-
-    virtual void* EntryPoint()
-    {
-        XSDK::x_sleep(_delay);
-
-        _socket->Close();
-
-        return NULL;
-    }
-
-private:
-    XRef<XSDK::XSocket> _socket;
-    int _delay;
-};
-
-class ClientSideResponseTest : public test_fixture, public XSDK::XTaskBase
-{
-public:
-    TEST_SUITE_INIT(ClientSideResponseTest)
-        _testNum(0),
+    TEST_SUITE_INIT(client_response_test)
         _total(0)
     TEST_SUITE_BEGIN()
-        TEST(ClientSideResponseTest::TestDefaultConstructor);
-        TEST(ClientSideResponseTest::TestCopyConstructor);
-        TEST(ClientSideResponseTest::TestAssignmentOperator);
-        TEST(ClientSideResponseTest::TestReceiveResponse);
-        TEST(ClientSideResponseTest::TestStreaming);
-        TEST(ClientSideResponseTest::Test100Continue);
-        TEST(ClientSideResponseTest::TestInterruptedStreaming);
-        TEST(ClientSideResponseTest::TestMultiPart);
-        TEST(ClientSideResponseTest::TestColonsInHeaders);
-        TEST(ClientSideResponseTest::TestMultipleHeadersWithSameKey);
-        TEST(ClientSideResponseTest::TestSpaceAtHeaderStart);
-        TEST(ClientSideResponseTest::TestTabAtHeaderStart);
-        TEST(ClientSideResponseTest::TestSpaceAtHeaderLine);
-        TEST(ClientSideResponseTest::TestTabAtHeaderLine);
-        TEST(ClientSideResponseTest::TestMultipleKeys);
+        TEST(client_response_test::test_default_constructor);
+        TEST(client_response_test::test_copy_constructor);
+        TEST(client_response_test::test_assignment_operator);
+        TEST(client_response_test::test_receive_response);
+        TEST(client_response_test::test_streaming);
+        TEST(client_response_test::test_100_continue);
+        TEST(client_response_test::test_interrupted_streaming);
+        TEST(client_response_test::test_multi_part);
+        TEST(client_response_test::TestColonsInHeaders);
+        TEST(client_response_test::TestMultipleHeadersWithSameKey);
+        TEST(client_response_test::TestSpaceAtHeaderStart);
+        TEST(client_response_test::TestTabAtHeaderStart);
+        TEST(client_response_test::TestSpaceAtHeaderLine);
+        TEST(client_response_test::TestTabAtHeaderLine);
+        TEST(client_response_test::TestMultipleKeys);
     TEST_SUITE_END()
 
 public:
 
-    virtual ~ClientSideResponseTest() throw() {}
+    virtual ~client_response_test() throw() {}
     void setup();
     void teardown();
 
-    static bool MyChunkHandler(void* context, XIRef<XSDK::XMemory> chunk, const WEBBY::ClientSideResponse& response);
-    static bool MyPartHandler(void* context, XIRef<XSDK::XMemory> chunk, const XSDK::XHash<XSDK::XString>& partHeaders, const WEBBY::ClientSideResponse& response);
-
 protected:
 
-    virtual void* EntryPoint();
-
-    void TestDefaultConstructor();
-    void TestCopyConstructor();
-    void TestAssignmentOperator();
-    void TestReceiveResponse();
-    void TestStreaming();
-    void Test100Continue();
-    void TestInterruptedStreaming();
-    void TestMultiPart();
+    void test_default_constructor();
+    void test_copy_constructor();
+    void test_assignment_operator();
+    void test_receive_response();
+    void test_streaming();
+    void test_100_continue();
+    void test_interrupted_streaming();
+    void test_multi_part();
     void TestColonsInHeaders();
     void TestMultipleHeadersWithSameKey();
     void TestSpaceAtHeaderStart();
@@ -109,5 +53,3 @@ protected:
     int _testNum;
     int _total;
 };
-
-#endif

@@ -43,8 +43,8 @@ namespace webbie
 
 class client_response;
 
-typedef std::function<bool(const std::vector<uint8_t>&, const client_response&)> chunk_callback;
-typedef std::function<bool(const std::vector<uint8_t>&, const std::map<std::string, cppkit::ck_string>&, const client_response&)> part_callback;
+typedef std::function<void(const std::vector<uint8_t>&, const client_response&)> chunk_callback;
+typedef std::function<void(const std::vector<uint8_t>&, const std::map<std::string, cppkit::ck_string>&, const client_response&)> part_callback;
 
 class client_response
 {

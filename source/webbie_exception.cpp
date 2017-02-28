@@ -32,6 +32,20 @@
 using namespace webbie;
 using namespace cppkit;
 
+webbie_io_exception::webbie_io_exception() :
+    ck_exception()
+{
+}
+
+webbie_io_exception::webbie_io_exception( const char* msg, ... ) :
+    ck_exception()
+{
+    va_list args;
+    va_start( args, msg );
+    set_msg( ck_string::format( msg, args ) );
+    va_end( args );
+}
+
 webbie_exception::webbie_exception() :
     ck_exception()
 {
