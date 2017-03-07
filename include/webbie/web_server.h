@@ -49,20 +49,37 @@ typedef std::function<server_response(const server_request& request)> http_cb;
 class web_server final
 {
 public:
-    web_server(int port, const cppkit::ck_string& sockAddr = cppkit::ck_string()) :
+    CK_API web_server(int port, const cppkit::ck_string& sockAddr = cppkit::ck_string()) :
         _cbs(),
         _server(port, std::bind(&web_server::_server_conn_cb, this, std::placeholders::_1), sockAddr),
-        _serverThread(std::thread(&cppkit::ck_server_threaded::start, &_server))
+        _serverThread()
     {
     }
 
-    ~web_server() throw()
+    CK_API web_server(const web_server&) = delete;
+
+    CK_API ~web_server() throw()
     {
-        _server.stop();
-        _serverThread.join();
+        stop();
     }
 
-    void add_route( int method, const cppkit::ck_string& path, http_cb cb )
+    CK_API web_server& operator = (const web_server&) = delete;
+
+    CK_API void start()
+    {
+        _serverThread = std::thread(&cppkit::ck_server_threaded::start, &_server);
+    }
+
+    CK_API void stop()
+    {
+        if( _server.started() )
+        {
+            _server.stop();
+            _serverThread.join();
+        }
+    }
+
+    CK_API void add_route( int method, const cppkit::ck_string& path, http_cb cb )
     {
         _cbs[method][path.to_std_string()] = cb;
     }

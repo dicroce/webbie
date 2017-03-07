@@ -1,5 +1,6 @@
 
 #include "web_server_test.h"
+#include "cppkit/os/ck_time_utils.h"
 #include "webbie/web_server.h"
 #include "webbie/client_request.h"
 #include "webbie/client_response.h"
@@ -45,10 +46,49 @@ void web_server_test::test_basic()
         return response;
     });
 
+    ws.start();
+
+    ck_usleep(1000000);
+
     client_request request("127.0.0.1", port);
     request.set_uri("/hi");
 
     auto response = _send_request(port, request);
 
     UT_ASSERT(response.get_body_as_string() == "hello" );
+}
+
+void web_server_test::test_not_found()
+{
+    int port = UT_NEXT_PORT();
+
+    web_server ws( port );
+
+    ws.add_route(METHOD_GET, "/hi", [](const server_request& request)->server_response {
+        server_response response;
+        response.set_body("hello");
+        return response;
+    });
+
+    ws.start();
+
+    {
+        client_request request("127.0.0.1", port);
+        request.set_uri("/hello");
+
+        auto response = _send_request(port, request);
+
+        UT_ASSERT(response.get_status() == response_not_found );
+    }
+
+    // make sure that after a server returns a 404, it still functioning.
+
+    {
+        client_request request("127.0.0.1", port);
+        request.set_uri("/hi");
+
+        auto response = _send_request(port, request);
+
+        UT_ASSERT(response.get_body_as_string() == "hello" );
+    }
 }
