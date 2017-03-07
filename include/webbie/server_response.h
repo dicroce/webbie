@@ -79,6 +79,8 @@ public:
                                       const cppkit::ck_string& headerValue);
     CK_API cppkit::ck_string get_additional_header(const cppkit::ck_string& headerName);
 
+    CK_API bool written() const { return _responseWritten; }
+
     CK_API void write_response(cppkit::ck_stream_io& socket);
 
     // Chunked transfer encoding support...
@@ -106,6 +108,7 @@ private:
     mutable std::vector<uint8_t> _body;
     bool _headerWritten;
     std::map<std::string,cppkit::ck_string> _additionalHeaders;
+    bool _responseWritten;
 };
 
 }

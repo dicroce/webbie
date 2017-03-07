@@ -1,0 +1,54 @@
+
+#include "web_server_test.h"
+#include "webbie/web_server.h"
+#include "webbie/client_request.h"
+#include "webbie/client_response.h"
+#include "webbie/server_request.h"
+#include "webbie/server_response.h"
+
+using namespace std;
+using namespace cppkit;
+using namespace webbie;
+
+REGISTER_TEST_FIXTURE(web_server_test);
+
+void web_server_test::setup()
+{
+}
+
+
+void web_server_test::teardown()
+{
+}
+
+client_response _send_request(int port, client_request& request)
+{
+    ck_socket socket;
+    socket.connect("127.0.0.1", port);
+    request.write_request(socket);
+
+    client_response response;
+    response.read_response(socket);
+
+    return response;
+}
+
+void web_server_test::test_basic()
+{
+    int port = UT_NEXT_PORT();
+
+    web_server ws( port );
+
+    ws.add_route(METHOD_GET, "/hi", [](const server_request& request)->server_response {
+        server_response response;
+        response.set_body("hello");
+        return response;
+    });
+
+    client_request request("127.0.0.1", port);
+    request.set_uri("/hi");
+
+    auto response = _send_request(port, request);
+
+    UT_ASSERT(response.get_body_as_string() == "hello" );
+}

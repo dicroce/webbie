@@ -44,7 +44,8 @@ server_response::server_response(status_code status, const ck_string& contentTyp
     _contentType(contentType),
     _body(),
     _headerWritten(false),
-    _additionalHeaders()
+    _additionalHeaders(),
+    _responseWritten(false)
 {
 }
 
@@ -53,7 +54,8 @@ server_response::server_response(const server_response& obj) :
     _contentType(obj._contentType),
     _body(obj._body),
     _headerWritten(obj._headerWritten),
-    _additionalHeaders(obj._additionalHeaders)
+    _additionalHeaders(obj._additionalHeaders),
+    _responseWritten(obj._responseWritten)
 {
 }
 
@@ -68,6 +70,7 @@ server_response& server_response::operator = (const server_response& obj)
     _body = obj._body;
     _headerWritten = obj._headerWritten;
     _additionalHeaders = obj._additionalHeaders;
+    _responseWritten = obj._responseWritten;
 
     return *this;
 }
@@ -144,6 +147,8 @@ ck_string server_response::get_additional_header(const ck_string& headerName)
 
 void server_response::write_response(ck_stream_io& socket)
 {
+    _responseWritten = true;
+
     time_t now = time(0);
     char* cstr = ctime(&now);
 
@@ -190,6 +195,8 @@ void server_response::write_response(ck_stream_io& socket)
 
 void server_response::write_chunk(ck_stream_io& socket, size_t sizeChunk, const void* bits)
 {
+    _responseWritten = true;
+
     if(!_headerWritten)
         _write_header(socket);
 
@@ -222,6 +229,8 @@ void server_response::write_part(cppkit::ck_stream_io& socket,
                                  void* chunk,
                                  uint32_t size)
 {
+    _responseWritten = true;
+
     auto boundaryLine = ck_string::format("--%s\r\n", boundary.c_str());
     socket.send(boundaryLine.c_str(), boundaryLine.length());
     if( !socket.valid() )

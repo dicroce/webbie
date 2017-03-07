@@ -5,7 +5,8 @@ include(common.cmake NO_POLICY_SCOPE)
 
 set(SOURCES source/framework.cpp
             source/client_request_test.cpp
-            source/client_response_test.cpp)
+            source/client_response_test.cpp
+            source/web_server_test.cpp)
 
 set(APPLICATION_TYPE "NORMAL_STATIC")
 

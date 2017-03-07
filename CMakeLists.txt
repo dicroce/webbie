@@ -11,6 +11,7 @@ set(SOURCES include/webbie/client_request.h
             include/webbie/status_codes.h
             include/webbie/uri.h
             include/webbie/url.h
+            include/webbie/web_server.h
             source/webbie_exception.cpp
             source/webbie_utils.cpp
             source/uri.cpp
@@ -19,7 +20,8 @@ set(SOURCES include/webbie/client_request.h
             source/client_response.cpp
             source/server_request.cpp
             source/server_response.cpp
-            source/methods.cpp)
+            source/methods.cpp
+            source/web_server.cpp)
 
 set(COMMON_LIBS cppkit)
 
