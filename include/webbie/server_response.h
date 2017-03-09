@@ -55,6 +55,9 @@ public:
     CK_API void set_status_code(status_code status);
     CK_API status_code get_status_code() const;
 
+    CK_API void set_connection_close(bool connectionClose) { _connectionClose = connectionClose; }
+    CK_API bool get_connection_close() const { return _connectionClose; }
+
 //
 // Possible Content-Type: values...
 //     "text/plain"
@@ -104,6 +107,7 @@ private:
     bool _write_header(cppkit::ck_stream_io& socket);
 
     status_code _status;
+    bool _connectionClose;
     cppkit::ck_string _contentType;
     mutable std::vector<uint8_t> _body;
     bool _headerWritten;

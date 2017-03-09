@@ -41,6 +41,7 @@ using namespace std;
 
 server_response::server_response(status_code status, const ck_string& contentType) :
     _status(status),
+    _connectionClose(true),
     _contentType(contentType),
     _body(),
     _headerWritten(false),
@@ -51,6 +52,7 @@ server_response::server_response(status_code status, const ck_string& contentTyp
 
 server_response::server_response(const server_response& obj) :
     _status(obj._status),
+    _connectionClose(obj._connectionClose),
     _contentType(obj._contentType),
     _body(obj._body),
     _headerWritten(obj._headerWritten),
@@ -66,6 +68,7 @@ server_response::~server_response() throw()
 server_response& server_response::operator = (const server_response& obj)
 {
     _status = obj._status;
+    _connectionClose = obj._connectionClose;
     _contentType = obj._contentType;
     _body = obj._body;
     _headerWritten = obj._headerWritten;
@@ -165,6 +168,9 @@ void server_response::write_response(ck_stream_io& socket)
                                                  _status,
                                                  _get_status_message(_status).c_str(),
                                                  timeString.c_str() );
+
+    if( _connectionClose )
+        responseHeader += ck_string("connection: close\r\n");
 
     if( _contentType.length() > 0 )
         responseHeader += ck_string::format( "Content-Type: %s\r\n",
