@@ -35,6 +35,37 @@ using namespace cppkit;
 using namespace std;
 using namespace webbie;
 
+void webbie::parse_url_parts( const ck_string url, ck_string& host, int& port, ck_string& uri )
+{
+    // Initially set port based on protocol if present...
+    port = (url.contains("https://")) ? 443 : 80;
+
+    size_t slashSlash = url.find("//");
+
+    size_t urlStart = (slashSlash==string::npos)?0:slashSlash+2;
+
+    size_t uriStart = url.find( "/", urlStart );
+
+    if( uriStart != string::npos )
+    {
+        host = url.substr( urlStart, uriStart-urlStart );
+        uri = url.substr( uriStart );
+    }
+    else
+    {
+        host = url.substr(urlStart);
+        uri = "/";
+    }
+
+    // If our host part contains a colon, then override our earlier port number...
+    if( host.contains( ":" ) )
+    {
+        auto hostParts = host.split( ":" );
+        port = hostParts[1].to_int();
+        host = hostParts[0];
+    }
+}
+
 ck_string webbie::adjust_header_name( const ck_string& name )
 {
     for( size_t i = 0, e = name.size(); i < e; ++i )

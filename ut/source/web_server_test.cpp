@@ -48,7 +48,7 @@ void web_server_test::test_basic()
 
     ws.start();
 
-    ck_usleep(1000000);
+    ck_usleep(100000);
 
     client_request request("127.0.0.1", port);
     request.set_uri("/hi");
@@ -71,6 +71,8 @@ void web_server_test::test_not_found()
     });
 
     ws.start();
+
+    ck_usleep(100000);
 
     {
         client_request request("127.0.0.1", port);

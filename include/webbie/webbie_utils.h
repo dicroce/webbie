@@ -35,6 +35,8 @@
 namespace webbie
 {
 
+CK_API void parse_url_parts( const cppkit::ck_string url, cppkit::ck_string& host, int& port, cppkit::ck_string& uri );
+
 /// \brief Verifies that the name of a header name-value pair doesn't contain
 ///        any invalid characters. It also lowers the name, since header names
 ///        are case-insensitive.
