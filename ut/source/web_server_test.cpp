@@ -40,7 +40,7 @@ void web_server_test::test_basic()
 
     web_server ws( port );
 
-    ws.add_route(METHOD_GET, "/hi", [](const server_request& request)->server_response {
+    ws.add_route(METHOD_GET, "/hi", [](const web_server& ws, cppkit::ck_buffered_socket<cppkit::ck_socket>& conn, const server_request& request)->server_response {
         server_response response;
         response.set_body("hello");
         return response;
@@ -64,7 +64,7 @@ void web_server_test::test_not_found()
 
     web_server ws( port );
 
-    ws.add_route(METHOD_GET, "/hi", [](const server_request& request)->server_response {
+    ws.add_route(METHOD_GET, "/hi", [](const web_server& ws, cppkit::ck_buffered_socket<cppkit::ck_socket>& conn, const server_request& request)->server_response {
         server_response response;
         response.set_body("hello");
         return response;

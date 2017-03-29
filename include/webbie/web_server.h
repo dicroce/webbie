@@ -44,7 +44,9 @@
 namespace webbie
 {
 
-typedef std::function<server_response(const server_request& request)> http_cb;
+class web_server;
+
+typedef std::function<server_response(const web_server& ws, cppkit::ck_buffered_socket<cppkit::ck_socket>& conn, const server_request& request)> http_cb;
 
 class web_server final
 {
@@ -106,7 +108,7 @@ private:
             if( foundRoute == foundMethod->second.end() )
                 CK_STHROW( http_404_exception, ("Unable to found path: %s", path.c_str()) );
 
-            auto response = foundRoute->second(request);
+            auto response = foundRoute->second(*this, conn, request);
             
             if(!response.written())
                 response.write_response(conn);
