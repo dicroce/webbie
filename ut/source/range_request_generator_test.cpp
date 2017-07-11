@@ -18,7 +18,7 @@ void range_request_generator_test::teardown()
 
 void range_request_generator_test::test_basic()
 {
-    range_request_generator rrg("/foo",15,4,0,"127.0.0.1",8080);
+    range_request_generator rrg("127.0.0.1",8080,"/foo",15,4,0);
 
     //range = bytes=0-3
     //range = bytes=4-7

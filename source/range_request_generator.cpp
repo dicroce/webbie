@@ -4,13 +4,13 @@
 using namespace cppkit;
 using namespace webbie;
 
-range_request_generator::range_request_generator(const ck_string& uri, size_t totalSize, size_t requestSize, size_t pos, const ck_string& host, int port) :
+range_request_generator::range_request_generator(const ck_string& host, int port, const ck_string& uri, size_t totalSize, size_t requestSize, size_t pos) :
+    _host(host),
+    _port(port),
     _uri(uri),
     _totalSize(totalSize),
     _requestSize(requestSize),
-    _pos(pos),
-    _host(host),
-    _port(port)
+    _pos(pos)
 {
 }
 

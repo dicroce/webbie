@@ -11,7 +11,7 @@ namespace webbie
 class range_request_generator final
 {
 public:
-    range_request_generator(const cppkit::ck_string& uri, size_t totalSize, size_t requestSize, size_t pos, const cppkit::ck_string& host, int port);
+    range_request_generator(const cppkit::ck_string& host, int port, const cppkit::ck_string& uri, size_t totalSize, size_t requestSize, size_t pos);
     range_request_generator(const range_request_generator& obj) = default;
     ~range_request_generator() throw();
 
@@ -22,12 +22,12 @@ public:
     void next();
 
 private:
+    cppkit::ck_string _host;
+    int _port;
     cppkit::ck_string _uri;
     size_t _totalSize;
     size_t _requestSize;
     size_t _pos;
-    cppkit::ck_string _host;
-    int _port;
 };
 
 }
