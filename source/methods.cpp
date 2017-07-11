@@ -47,6 +47,8 @@ ck_string method_text( int method )
         return "DELETE";
     else if( method == METHOD_PATCH )
         return "PATCH";
+    else if( method == METHOD_HEAD )
+        return "HEAD";
 
     CK_STHROW( webbie_exception, ("Unsupported method.") );
 }
@@ -65,6 +67,8 @@ int method_type( const ck_string& methodText )
         return METHOD_DELETE;
     else if( lowerMethod == "patch" )
         return METHOD_PATCH;
+    else if( lowerMethod == "head" )
+        return METHOD_HEAD;
 
     CK_STHROW( webbie_exception, ("Unsupported method.") );
 }

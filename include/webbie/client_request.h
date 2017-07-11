@@ -43,6 +43,7 @@
 #include "webbie/methods.h"
 
 class client_request_test;
+class range_request_generator_test;
 
 namespace webbie
 {
@@ -56,6 +57,7 @@ const cppkit::ck_string patch_request = "PATCH";
 class client_request
 {
     friend class ::client_request_test;
+    friend class ::range_request_generator_test;
 
 public:
     CK_API client_request( const cppkit::ck_string& host, int hostPort );

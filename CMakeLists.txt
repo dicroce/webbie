@@ -21,7 +21,8 @@ set(SOURCES include/webbie/client_request.h
             source/server_request.cpp
             source/server_response.cpp
             source/methods.cpp
-            source/web_server.cpp)
+            source/web_server.cpp
+            source/range_request_generator.cpp)
 
 set(COMMON_LIBS cppkit)
 

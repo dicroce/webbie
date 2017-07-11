@@ -40,6 +40,7 @@ const int METHOD_POST = 2;
 const int METHOD_PUT = 3;
 const int METHOD_DELETE = 4;
 const int METHOD_PATCH = 5;
+const int METHOD_HEAD = 6;
 
 cppkit::ck_string method_text( int method );
 
