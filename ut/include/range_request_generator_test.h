@@ -9,6 +9,7 @@ class range_request_generator_test : public test_fixture
 public:
     TEST_SUITE(range_request_generator_test);
         TEST(range_request_generator_test::test_basic);
+        TEST(range_request_generator_test::test_even);
     TEST_SUITE_END();
 
     ~range_request_generator_test() throw() {}
@@ -17,6 +18,7 @@ public:
 
 protected:
     void test_basic();
+    void test_even();
 
 };
 
