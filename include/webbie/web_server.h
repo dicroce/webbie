@@ -103,7 +103,13 @@ private:
 
             auto path = ruri.get_full_resource_path();
 
-            auto foundRoute = foundMethod->second.find(path.to_std_string());
+            auto foundRoute = foundMethod->second.end();
+
+            for(auto i = foundMethod->second.begin(), e = foundMethod->second.end(); i != e; ++i)
+            {
+                if(path.to_std_string().compare(0, i->first.length(), i->first) == 0)
+                    foundRoute = i;
+            }
 
             if( foundRoute == foundMethod->second.end() )
                 CK_STHROW( http_404_exception, ("Unable to found path: %s", path.c_str()) );
