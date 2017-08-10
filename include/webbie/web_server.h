@@ -116,23 +116,41 @@ private:
 
             auto response = foundRoute->second(*this, conn, request);
             
-            if(!response.written())
+            if(!response.written() && conn.valid())
                 response.write_response(conn);
         }
         catch(http_404_exception& ex)
         {
             CK_LOG_CPPKIT_EXCEPTION(ex);
 
-            server_response response;
-            response.set_status_code(response_not_found);
-            response.write_response(conn);
+            if(conn.valid())
+            {
+                server_response response;
+                response.set_status_code(response_not_found);
+                response.write_response(conn);
+            }
+        }
+        catch(std::exception& ex)
+        {
+            if(conn.valid())
+            {
+                server_response response;
+                response.set_status_code(response_internal_server_error);
+                response.write_response(conn);
+            }
+
+            CK_LOG_STD_EXCEPTION(ex);            
         }
         catch(...)
         {
-            server_response response;
-            response.set_status_code(response_internal_server_error);
-            response.write_response(conn);
-            throw;
+            if(conn.valid())
+            {
+                server_response response;
+                response.set_status_code(response_internal_server_error);
+                response.write_response(conn);
+            }
+            
+            CK_LOG_NOTICE("An unknown exception has occurred.");
         }
     }
 
