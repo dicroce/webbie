@@ -10,7 +10,7 @@ set(SOURCES source/framework.cpp
             source/utils_test.cpp
             source/range_request_generator_test.cpp)
 
-set(APPLICATION_TYPE "NORMAL_STATIC")
+set(APPLICATION_TYPE "NORMAL")
 
 set(COMMON_LIBS cppkit webbie)
 set(THIRD_PARTY_LIBS ssl crypto)

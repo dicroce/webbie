@@ -9,6 +9,7 @@ class web_server_test : public test_fixture
 public:
     TEST_SUITE(web_server_test);
         TEST(web_server_test::test_basic);
+        TEST(web_server_test::test_basic_ssl);
         TEST(web_server_test::test_not_found);
     TEST_SUITE_END();
 
@@ -18,6 +19,7 @@ public:
 
 protected:
     void test_basic();
+    void test_basic_ssl();
     void test_not_found();
 
 };

@@ -44,32 +44,34 @@
 namespace webbie
 {
 
+template<class SOK_T>
 class web_server;
 
-typedef std::function<server_response(const web_server& ws, cppkit::ck_buffered_socket<cppkit::ck_socket>& conn, const server_request& request)> http_cb;
-
+template<class SOK_T>
 class web_server final
 {
 public:
+    typedef std::function<server_response(const web_server<SOK_T>& ws, cppkit::ck_buffered_socket<SOK_T>& conn, const server_request& request)> http_cb;
+
     CK_API web_server(int port, const cppkit::ck_string& sockAddr = cppkit::ck_string()) :
         _cbs(),
-        _server(port, std::bind(&web_server::_server_conn_cb, this, std::placeholders::_1), sockAddr),
+        _server(port, std::bind(&web_server<SOK_T>::_server_conn_cb, this, std::placeholders::_1), sockAddr),
         _serverThread()
     {
     }
 
-    CK_API web_server(const web_server&) = delete;
+    CK_API web_server(const web_server<SOK_T>&) = delete;
 
     CK_API ~web_server() throw()
     {
         stop();
     }
 
-    CK_API web_server& operator = (const web_server&) = delete;
+    CK_API web_server<SOK_T>& operator = (const web_server<SOK_T>&) = delete;
 
     CK_API void start()
     {
-        _serverThread = std::thread(&cppkit::ck_server_threaded::start, &_server);
+        _serverThread = std::thread(&cppkit::ck_server_threaded<SOK_T>::start, &_server);
     }
 
     CK_API void stop()
@@ -86,8 +88,10 @@ public:
         _cbs[method][path.to_std_string()] = cb;
     }
 
+    CK_API SOK_T& get_socket() { return _server.get_socket(); }
+
 private:
-    void _server_conn_cb(cppkit::ck_buffered_socket<cppkit::ck_socket>& conn)
+    void _server_conn_cb(cppkit::ck_buffered_socket<SOK_T>& conn)
     {
         server_request request;
         request.read_request(conn);
@@ -155,7 +159,7 @@ private:
     }
 
     std::map<int, std::map<std::string, http_cb>> _cbs;
-    cppkit::ck_server_threaded _server;
+    cppkit::ck_server_threaded<SOK_T> _server;
     std::thread _serverThread;
 };
 
