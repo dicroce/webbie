@@ -136,25 +136,22 @@ private:
         }
         catch(std::exception& ex)
         {
-            if(conn.valid())
-            {
-                server_response response;
-                response.set_status_code(response_internal_server_error);
-                response.write_response(conn);
-            }
-
+            // Note: we cannot write a response here because this exception
+            // might indicate our sockets are not invalid simply because of
+            // and incomplete io... but nevertheless our sockets might not
+            // be able to communicate becuase the other side make have
+            // broken its connection.
             CK_LOG_STD_EXCEPTION(ex);            
         }
         catch(...)
         {
-            if(conn.valid())
-            {
-                server_response response;
-                response.set_status_code(response_internal_server_error);
-                response.write_response(conn);
-            }
-            
-            CK_LOG_NOTICE("An unknown exception has occurred.");
+            // Note: we cannot write a response here because this exception
+            // might indicate our sockets are not invalid simply because of
+            // and incomplete io... but nevertheless our sockets might not
+            // be able to communicate becuase the other side make have
+            // broken its connection.
+
+            CK_LOG_NOTICE("An unknown exception has occurred in our web server.");
         }
     }
 
