@@ -35,10 +35,19 @@ using namespace cppkit;
 using namespace std;
 using namespace webbie;
 
-void webbie::parse_url_parts( const ck_string url, ck_string& host, int& port, ck_string& uri )
+void webbie::parse_url_parts( const ck_string url, ck_string& host, int& port, ck_string& protocol, ck_string& uri )
 {
     // Initially set port based on protocol if present...
-    port = (url.contains("https://")) ? 443 : 80;
+    if(url.contains("https://"))
+    {
+        protocol = "https";
+        port = 443;
+    }
+    else
+    {
+        protocol = "http";
+        port = 80;
+    }
 
     size_t slashSlash = url.find("//");
 

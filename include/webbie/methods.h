@@ -35,12 +35,24 @@
 namespace webbie
 {
 
+enum webbie_method
+{
+    METHOD_GET = 1,
+    METHOD_POST = 2,
+    METHOD_PUT = 3,
+    METHOD_DELETE = 4,
+    METHOD_PATCH = 5,
+    METHOD_HEAD = 6
+};
+
+#if 0
 const int METHOD_GET = 1;
 const int METHOD_POST = 2;
 const int METHOD_PUT = 3;
 const int METHOD_DELETE = 4;
 const int METHOD_PATCH = 5;
 const int METHOD_HEAD = 6;
+#endif
 
 cppkit::ck_string method_text( int method );
 
