@@ -119,7 +119,7 @@ private:
                 CK_STHROW( http_404_exception, ("Unable to found path: %s", path.c_str()) );
 
             auto response = foundRoute->second(*this, conn, request);
-            
+
             if(!response.written() && conn.valid())
                 response.write_response(conn);
         }
@@ -141,7 +141,7 @@ private:
             // and incomplete io... but nevertheless our sockets might not
             // be able to communicate becuase the other side make have
             // broken its connection.
-            CK_LOG_STD_EXCEPTION(ex);            
+            CK_LOG_STD_EXCEPTION(ex);
         }
         catch(...)
         {
