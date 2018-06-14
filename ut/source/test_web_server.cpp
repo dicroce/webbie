@@ -18,7 +18,6 @@ void test_web_server::teardown()
 {
 }
 
-
 client_response _send_request(int port, client_request& request)
 {
     ck_socket socket;
