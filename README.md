@@ -14,3 +14,7 @@ Minimal http implementation suitable for implementing basic rest interfaces. Min
     ws.start();
 
 Check out the unit tests for more examples.
+
+building
+========
+mkdir build && cd build && cmake .. && make
