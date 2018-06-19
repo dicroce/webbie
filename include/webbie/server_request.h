@@ -1,6 +1,6 @@
 
-#ifndef webbie_r_server_request_h
-#define webbie_r_server_request_h
+#ifndef webbie_server_request_h
+#define webbie_server_request_h
 
 #include <list>
 #include <map>
@@ -15,16 +15,16 @@
 namespace webbie
 {
 
-class r_server_request
+class server_request
 {
 public:
-    r_server_request();
+    server_request();
 
-    r_server_request(const r_server_request& rhs);
+    server_request(const server_request& rhs);
 
-    virtual ~r_server_request() noexcept;
+    virtual ~server_request() noexcept;
 
-    r_server_request& operator = (const r_server_request& rhs);
+    server_request& operator = (const server_request& rhs);
 
     void read_request(cppkit::ck_stream_io& socket);
 

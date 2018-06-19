@@ -1,6 +1,6 @@
 
-#ifndef webbie_r_server_response_h
-#define webbie_r_server_response_h
+#ifndef webbie_server_response_h
+#define webbie_server_response_h
 
 #include "webbie/status_codes.h"
 #include "cppkit/interfaces/ck_stream_io.h"
@@ -12,17 +12,17 @@
 namespace webbie
 {
 
-class r_server_response
+class server_response
 {
 public:
-    r_server_response(status_code status = response_ok,
+    server_response(status_code status = response_ok,
                       const std::string& contentType = "text/plain");
 
-    r_server_response(const r_server_response& obj);
+    server_response(const server_response& obj);
 
-    virtual ~r_server_response() noexcept;
+    virtual ~server_response() noexcept;
 
-    r_server_response& operator=(const r_server_response& obj);
+    server_response& operator=(const server_response& obj);
 
     void set_status_code(status_code status);
     status_code get_status_code() const;

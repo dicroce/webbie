@@ -10,7 +10,7 @@ using namespace webbie;
 using namespace cppkit;
 using namespace std;
 
-r_server_response::r_server_response(status_code status, const string& contentType) :
+server_response::server_response(status_code status, const string& contentType) :
     _status(status),
     _connectionClose(true),
     _contentType(contentType),
@@ -21,7 +21,7 @@ r_server_response::r_server_response(status_code status, const string& contentTy
 {
 }
 
-r_server_response::r_server_response(const r_server_response& obj) :
+server_response::server_response(const server_response& obj) :
     _status(obj._status),
     _connectionClose(obj._connectionClose),
     _contentType(obj._contentType),
@@ -32,11 +32,11 @@ r_server_response::r_server_response(const r_server_response& obj) :
 {
 }
 
-r_server_response::~r_server_response() noexcept
+server_response::~server_response() noexcept
 {
 }
 
-r_server_response& r_server_response::operator = (const r_server_response& obj)
+server_response& server_response::operator = (const server_response& obj)
 {
     _status = obj._status;
     _connectionClose = obj._connectionClose;
@@ -49,63 +49,63 @@ r_server_response& r_server_response::operator = (const r_server_response& obj)
     return *this;
 }
 
-void r_server_response::set_status_code(status_code status)
+void server_response::set_status_code(status_code status)
 {
     _status = status;
 }
 
-status_code r_server_response::get_status_code() const
+status_code server_response::get_status_code() const
 {
     return _status;
 }
 
-void r_server_response::set_content_type(const string& contentType)
+void server_response::set_content_type(const string& contentType)
 {
     _contentType = contentType;
 }
 
-string r_server_response::get_content_type() const
+string server_response::get_content_type() const
 {
     return _contentType;
 }
 
-void r_server_response::set_body(vector<uint8_t>&& body)
+void server_response::set_body(vector<uint8_t>&& body)
 {
     _body = std::move(body);
 }
 
-void r_server_response::set_body(const string& body)
+void server_response::set_body(const string& body)
 {
     set_body( body.length(), body.c_str() );
 }
 
-void r_server_response::set_body( size_t bodySize, const void* bits )
+void server_response::set_body( size_t bodySize, const void* bits )
 {
     _body.resize( bodySize );
     memcpy( &_body[0], bits, bodySize );
 }
 
-size_t r_server_response::get_body_size() const
+size_t server_response::get_body_size() const
 {
     return _body.size();
 }
 
-const void* r_server_response::get_body() const
+const void* server_response::get_body() const
 {
     return &_body[0];
 }
 
-string r_server_response::get_body_as_string() const
+string server_response::get_body_as_string() const
 {
     return string((char*)&_body[0], _body.size());
 }
 
-void r_server_response::clear_additional_headers()
+void server_response::clear_additional_headers()
 {
     _additionalHeaders.clear();
 }
 
-void r_server_response::add_additional_header(const string& headerName,
+void server_response::add_additional_header(const string& headerName,
                                             const string& headerValue)
 {
     auto found = _additionalHeaders.find( headerName );
@@ -115,7 +115,7 @@ void r_server_response::add_additional_header(const string& headerName,
     _additionalHeaders.insert( make_pair( headerName, headerValue) );
 }
 
-string r_server_response::get_additional_header(const string& headerName)
+string server_response::get_additional_header(const string& headerName)
 {
     auto found = _additionalHeaders.find( headerName );
     if( found != _additionalHeaders.end() )
@@ -124,7 +124,7 @@ string r_server_response::get_additional_header(const string& headerName)
     return string();
 }
 
-void r_server_response::write_response(ck_stream_io& socket)
+void server_response::write_response(ck_stream_io& socket)
 {
     _responseWritten = true;
 
@@ -175,7 +175,7 @@ void r_server_response::write_response(ck_stream_io& socket)
     }
 }
 
-void r_server_response::write_chunk(ck_stream_io& socket, size_t sizeChunk, const void* bits)
+void server_response::write_chunk(ck_stream_io& socket, size_t sizeChunk, const void* bits)
 {
     _responseWritten = true;
 
@@ -197,7 +197,7 @@ void r_server_response::write_chunk(ck_stream_io& socket, size_t sizeChunk, cons
         CK_STHROW( webbie_io_exception, ("Socket invalid."));
 }
 
-void r_server_response::write_chunk_finalizer(ck_stream_io& socket)
+void server_response::write_chunk_finalizer(ck_stream_io& socket)
 {
     string finalizer("0\r\n\r\n");
     socket.send(finalizer.c_str(), finalizer.length());
@@ -205,7 +205,7 @@ void r_server_response::write_chunk_finalizer(ck_stream_io& socket)
         CK_STHROW( webbie_io_exception, ("Socket invalid."));
 }
 
-void r_server_response::write_part(ck_stream_io& socket,
+void server_response::write_part(ck_stream_io& socket,
                                    const string& boundary,
                                    const map<string,string>& partHeaders,
                                    void* chunk,
@@ -248,7 +248,7 @@ void r_server_response::write_part(ck_stream_io& socket,
         CK_STHROW( webbie_io_exception, ("Socket invalid."));
 }
 
-void r_server_response::write_part_finalizer(ck_stream_io& socket, const string& boundary)
+void server_response::write_part_finalizer(ck_stream_io& socket, const string& boundary)
 {
     auto finalizerLine = ck_string_utils::format("--%s--\r\n", boundary.c_str());
     socket.send(finalizerLine.c_str(), finalizerLine.length());
@@ -256,7 +256,7 @@ void r_server_response::write_part_finalizer(ck_stream_io& socket, const string&
         CK_STHROW( webbie_io_exception, ("Socket invalid."));
 }
 
-string r_server_response::_get_status_message(status_code sc) const
+string server_response::_get_status_message(status_code sc) const
 {
     switch(sc)
     {
@@ -306,7 +306,7 @@ string r_server_response::_get_status_message(status_code sc) const
     CK_STHROW(webbie_exception_generic, ("Unknown status code."));
 }
 
-bool r_server_response::_write_header(ck_stream_io& socket)
+bool server_response::_write_header(ck_stream_io& socket)
 {
     time_t now = time(0);
     char* cstr = ctime(&now);

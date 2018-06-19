@@ -13,7 +13,7 @@ using namespace std;
 
 static const unsigned int MAX_HEADER_LINE = 16384;
 
-r_server_request::r_server_request() :
+server_request::server_request() :
     _initialLine(),
     _headerParts(),
     _postVars(),
@@ -22,7 +22,7 @@ r_server_request::r_server_request() :
 {
 }
 
-r_server_request::r_server_request(const r_server_request& obj) :
+server_request::server_request(const server_request& obj) :
     _initialLine(obj._initialLine),
     _headerParts(obj._headerParts),
     _postVars(obj._postVars),
@@ -31,11 +31,11 @@ r_server_request::r_server_request(const r_server_request& obj) :
 {
 }
 
-r_server_request::~r_server_request() noexcept
+server_request::~server_request() noexcept
 {
 }
 
-r_server_request& r_server_request::operator = (const r_server_request& obj)
+server_request& server_request::operator = (const server_request& obj)
 {
     _initialLine = obj._initialLine;
     _headerParts = obj._headerParts;
@@ -46,7 +46,7 @@ r_server_request& r_server_request::operator = (const r_server_request& obj)
     return *this;
 }
 
-void r_server_request::read_request(cppkit::ck_stream_io& socket)
+void server_request::read_request(cppkit::ck_stream_io& socket)
 {
     list<string> requestLines;
 
@@ -96,32 +96,32 @@ void r_server_request::read_request(cppkit::ck_stream_io& socket)
         _process_body(socket);
 }
 
-bool r_server_request::is_patch_request() const
+bool server_request::is_patch_request() const
 {
     return get_method() == METHOD_PATCH;
 }
 
-bool r_server_request::is_post_request() const
+bool server_request::is_post_request() const
 {
     return get_method() == METHOD_POST;
 }
 
-bool r_server_request::is_get_request() const
+bool server_request::is_get_request() const
 {
     return get_method() == METHOD_GET;
 }
 
-bool r_server_request::is_put_request() const
+bool server_request::is_put_request() const
 {
     return get_method() == METHOD_PUT;
 }
 
-bool r_server_request::is_delete_request() const
+bool server_request::is_delete_request() const
 {
     return get_method() == METHOD_DELETE;
 }
 
-int r_server_request::get_method() const
+int server_request::get_method() const
 {
     auto h = get_header("method");
     if(h.is_null())
@@ -130,7 +130,7 @@ int r_server_request::get_method() const
     return method_type(h.value());
 }
 
-uri r_server_request::get_uri() const
+uri server_request::get_uri() const
 {
     auto h = get_header("uri");
     if(h.is_null())
@@ -139,12 +139,12 @@ uri r_server_request::get_uri() const
     return uri(h.value());
 }
 
-string r_server_request::get_content_type() const
+string server_request::get_content_type() const
 {
     return _contentType;
 }
 
-void r_server_request::_set_header(const string& name, const string& value)
+void server_request::_set_header(const string& name, const string& value)
 {
     const string adjName = adjust_header_name(name);
     const string adjValue = adjust_header_value(value);
@@ -152,7 +152,7 @@ void r_server_request::_set_header(const string& name, const string& value)
     _headerParts[adjName] = adjValue;
 }
 
-ck_nullable<string> r_server_request::get_header( const std::string& key ) const
+ck_nullable<string> server_request::get_header( const std::string& key ) const
 {
     ck_nullable<string> result;
 
@@ -163,32 +163,32 @@ ck_nullable<string> r_server_request::get_header( const std::string& key ) const
     return result;
 }
 
-map<string,string> r_server_request::get_headers() const
+map<string,string> server_request::get_headers() const
 {
     return _headerParts;
 }
 
-const uint8_t* r_server_request::get_body() const
+const uint8_t* server_request::get_body() const
 {
     return &_body[0];
 }
 
-size_t r_server_request::get_body_size() const
+size_t server_request::get_body_size() const
 {
     return _body.size();
 }
 
-string r_server_request::get_body_as_string() const
+string server_request::get_body_as_string() const
 {
     return string((char*)&_body[0], _body.size());
 }
 
-map<string,string> r_server_request::get_post_vars() const
+map<string,string> server_request::get_post_vars() const
 {
     return _postVars;
 }
 
-void r_server_request::_clean_socket(ck_stream_io& socket, char** writer)
+void server_request::_clean_socket(ck_stream_io& socket, char** writer)
 {
     if(!socket.valid())
         CK_STHROW(webbie_exception_generic, ("Invalid Socket"));
@@ -211,7 +211,7 @@ void r_server_request::_clean_socket(ck_stream_io& socket, char** writer)
     }
 }
 
-void r_server_request::_read_header_line(ck_stream_io& socket, char* writer, bool firstLine)
+void server_request::_read_header_line(ck_stream_io& socket, char* writer, bool firstLine)
 {
     bool lineDone = false;
     size_t bytesReadThisLine = 0;
@@ -236,7 +236,7 @@ void r_server_request::_read_header_line(ck_stream_io& socket, char* writer, boo
 }
 
 
-bool r_server_request::_add_line(std::list<string>& lines, const string& line)
+bool server_request::_add_line(std::list<string>& lines, const string& line)
 {
     if(ck_string_utils::starts_with(line, "\r\n") || ck_string_utils::starts_with(line, "\n"))
         return true;
@@ -254,7 +254,7 @@ bool r_server_request::_add_line(std::list<string>& lines, const string& line)
     return false;
 }
 
-void r_server_request::_process_request_lines(const list<string>& requestLines)
+void server_request::_process_request_lines(const list<string>& requestLines)
 {
     // Now, iterate on the header lines...
 
@@ -272,7 +272,7 @@ void r_server_request::_process_request_lines(const list<string>& requestLines)
     }
 }
 
-void r_server_request::_process_body(ck_stream_io& socket)
+void server_request::_process_body(ck_stream_io& socket)
 {
     auto cl = get_header("Content-Length");
 

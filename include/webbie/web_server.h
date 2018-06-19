@@ -1,6 +1,6 @@
 
-#ifndef webbie_r_web_server_h
-#define webbie_r_web_server_h
+#ifndef webbie_web_server_h
+#define webbie_web_server_h
 
 #include "webbie/server_request.h"
 #include "webbie/server_response.h"
@@ -20,7 +20,7 @@
         CK_LOG_EXCEPTION(ex); \
         if(conn.valid()) \
         { \
-            r_server_response response; \
+            server_response response; \
             response.set_status_code(code); \
             response.write_response(conn); \
         } \
@@ -30,29 +30,29 @@ namespace webbie
 {
 
 template<class SOK_T>
-class r_web_server;
+class web_server;
 
 template<class SOK_T>
-class r_web_server final
+class web_server final
 {
 public:
-    typedef std::function<r_server_response(const r_web_server<SOK_T>& ws, cppkit::ck_buffered_socket<SOK_T>& conn, const r_server_request& request)> http_cb;
+    typedef std::function<server_response(const web_server<SOK_T>& ws, cppkit::ck_buffered_socket<SOK_T>& conn, const server_request& request)> http_cb;
 
-    r_web_server(int port, const std::string& sockAddr = std::string()) :
+    web_server(int port, const std::string& sockAddr = std::string()) :
         _cbs(),
-        _server(port, std::bind(&r_web_server<SOK_T>::_server_conn_cb, this, std::placeholders::_1), sockAddr),
+        _server(port, std::bind(&web_server<SOK_T>::_server_conn_cb, this, std::placeholders::_1), sockAddr),
         _serverThread()
     {
     }
 
-    r_web_server(const r_web_server<SOK_T>&) = delete;
+    web_server(const web_server<SOK_T>&) = delete;
 
-    ~r_web_server() noexcept
+    ~web_server() noexcept
     {
         stop();
     }
 
-    r_web_server<SOK_T>& operator = (const r_web_server<SOK_T>&) = delete;
+    web_server<SOK_T>& operator = (const web_server<SOK_T>&) = delete;
 
     void start()
     {
@@ -78,7 +78,7 @@ public:
 private:
     void _server_conn_cb(cppkit::ck_buffered_socket<SOK_T>& conn)
     {
-        r_server_request request;
+        server_request request;
         request.read_request(conn);
 
         uri ruri = request.get_uri();

@@ -56,7 +56,7 @@ void test_client_request::test_write_request()
 
         auto clientSocket = socket.accept();
 
-        r_server_request request;
+        server_request request;
 
         request.read_request(clientSocket);
 

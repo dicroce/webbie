@@ -47,12 +47,12 @@ void test_client_response::test_receive_response()
 
         auto clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
         auto body = ssRequest.get_body_as_string();
 
-        r_server_response ssResponse;
+        server_response ssResponse;
         ssResponse.set_body(body);
         RTF_ASSERT_NO_THROW(ssResponse.write_response(clientSocket));
 
@@ -95,10 +95,10 @@ void test_client_response::test_streaming()
 
         auto clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
-        r_server_response ssResponse;
+        server_response ssResponse;
         ssResponse.set_content_type("application/x-rtsp-tunnelled");
 
         for(uint8_t i = 0; i < 10; ++i)
@@ -147,7 +147,7 @@ void test_client_response::test_100_continue()
 
         auto clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
         auto body = ssRequest.get_body_as_string();
@@ -155,7 +155,7 @@ void test_client_response::test_100_continue()
         string cont = "HTTP/1.1 100 Continue\r\n\r\n";
         clientSocket.send(cont.c_str(), cont.length());
 
-        r_server_response ssResponse;
+        server_response ssResponse;
         ssResponse.set_body(body);
         ssResponse.write_response(clientSocket);
     });
@@ -196,10 +196,10 @@ void test_client_response::test_interrupted_streaming()
 
         auto clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
-        r_server_response ssResponse;
+        server_response ssResponse;
         ssResponse.set_content_type("application/x-rtsp-tunnelled");
 
         try
@@ -269,10 +269,10 @@ void test_client_response::test_multi_part()
 
         auto clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
-        r_server_response ssResponse;
+        server_response ssResponse;
         ssResponse.set_content_type("multipart/x-mixed-replace; boundary=\"foo\"");
 
         ssResponse.write_response(clientSocket);
@@ -326,10 +326,10 @@ void test_client_response::TestColonsInHeaders()
 
         ck_socket clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
-        r_server_response ssResponse;
+        server_response ssResponse;
         ssResponse.add_additional_header("HeaderWithColon", "This header has a : in it.");
 
         ssResponse.write_response(clientSocket);
@@ -363,10 +363,10 @@ void test_client_response::TestMultipleHeadersWithSameKey()
 
         ck_socket clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
-        //Note: We don't use r_server_response here because r_server_response does not support
+        //Note: We don't use server_response here because server_response does not support
         //multiple header values associated with the same key. If this is needed, we could add it, but
         //for now we just return a manually constructed response.
 
@@ -408,7 +408,7 @@ void test_client_response::TestSpaceAtHeaderStart()
 
         ck_socket clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
         string response = "HTTP/1.1 200 OK\r\n Date: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\nvalue:key\r\n\r\n";
@@ -439,7 +439,7 @@ void test_client_response::TestTabAtHeaderStart()
 
         ck_socket clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
         string response = "HTTP/1.1 200 OK\r\n\tDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\nvalue:key\r\n\r\n";
@@ -470,7 +470,7 @@ void test_client_response::TestSpaceAtHeaderLine()
 
         ck_socket clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
         string response = "HTTP/1.1 200 OK\r\nDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\n value:key\r\n\r\n";
@@ -511,7 +511,7 @@ void test_client_response::TestTabAtHeaderLine()
 
         ck_socket clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
         string response = "HTTP/1.1 200 OK\r\nDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\n\tvalue:key\r\n\r\n";
@@ -552,7 +552,7 @@ void test_client_response::TestMultipleKeys()
 
         ck_socket clientSocket = socket.accept();
 
-        r_server_request ssRequest;
+        server_request ssRequest;
         ssRequest.read_request(clientSocket);
 
         string response = "HTTP/1.1 200 OK\r\nDate: Mon Nov 14 09:58:23 2011\r\nContent-Type: text/plain\r\nkey: val 1\r\nhole: val 2\r\nvalue:key\r\n\r\n";

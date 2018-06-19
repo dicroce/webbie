@@ -19,7 +19,7 @@ void test_range_request_generator::teardown()
 
 void test_range_request_generator::test_basic()
 {
-    r_range_request_generator rrg("127.0.0.1", 8080, "/foo", 15, 4, 0);
+    range_request_generator rrg("127.0.0.1", 8080, "/foo", 15, 4, 0);
 
     //range = bytes=0-3
     //range = bytes=4-7
@@ -45,7 +45,7 @@ void test_range_request_generator::test_basic()
 
 void test_range_request_generator::test_even()
 {
-    r_range_request_generator rrg("127.0.0.1", 8080, "/foo", 10, 2, 0);
+    range_request_generator rrg("127.0.0.1", 8080, "/foo", 10, 2, 0);
 
     //range = bytes=0-1
     //range = bytes=2-3

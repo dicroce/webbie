@@ -3,12 +3,12 @@ webbie
 
 Minimal http implementation suitable for implementing basic rest interfaces. Example:
 
-    r_web_server<ck_socket> ws(4242);
+    web_server<ck_socket> ws(4242);
 
-    ws.add_route(METHOD_GET, "/hi", [](const r_web_server<ck_socket>& ws,
+    ws.add_route(METHOD_GET, "/hi", [](const web_server<ck_socket>& ws,
                                        ck_buffered_socket<ck_socket>& conn,
-                                       const r_server_request& request)->r_server_response {
-        r_server_response response;
+                                       const server_request& request)->server_response {
+        server_response response;
         response.set_body("hello");
         return response;
     });
