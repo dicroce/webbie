@@ -1,7 +1,7 @@
 webbie
 ======
 
-Minimal http implementation suitable for implementing basic rest interfaces. Minimal example:
+Minimal http implementation suitable for implementing basic rest interfaces. Example:
 
     r_web_server<ck_socket> ws(4242);
 
