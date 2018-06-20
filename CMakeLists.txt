@@ -10,12 +10,14 @@ set (CMAKE_CXX_STANDARD 14)
 
 # Dependencies
 
-download_project (PROJ cppkit
-                  GIT_REPOSITORY https://github.com/dicroce/cppkit
-                  GIT_TAG master
-                  ${UPDATE_DISCONNECTED_IF_AVAILABLE})
+if(NOT EXISTS ${cppkit_SOURCE_DIR})
+    download_project (PROJ cppkit
+                    GIT_REPOSITORY https://github.com/dicroce/cppkit
+                    GIT_TAG master
+                    ${UPDATE_DISCONNECTED_IF_AVAILABLE})
 
-add_subdirectory (${cppkit_SOURCE_DIR} ${cppkit_BINARY_DIR})
+    add_subdirectory (${cppkit_SOURCE_DIR} ${cppkit_BINARY_DIR})
+endif()
 
 # webbie
 
