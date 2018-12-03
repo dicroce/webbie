@@ -1,5 +1,6 @@
 
 #include "framework.h"
+#include <algorithm>
 #include <time.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -81,28 +82,17 @@ int main( int argc, char* argv[] )
 {
     set_terminate( handle_terminate );
 
-    std::string fixture_name = "";
-    bool dontWaitOnFail = false;
+    std::vector<std::string> args;
+    for(int i = 1; i < argc; ++i)
+        args.push_back(argv[i]);
 
-    if( argc > 1 )
-    {
-        std::string arg1 = argv[1];
+    bool dontWaitOnFail = (std::find(args.begin(), args.end(), "--dont-wait-on-fail") != args.end());
+    bool forceWait = (std::find(args.begin(), args.end(), "--force-wait") != args.end());
 
-        if(arg1 == "--dont-wait-on-fail")
-            dontWaitOnFail = true;
-        else fixture_name = argv[1];
-
-        if( argc > 2 )
-        {
-            std::string arg2 = argv[2];
-            if(arg2 == "--dont-wait-on-fail")
-                dontWaitOnFail = true;
-            else fixture_name = argv[2];
-        }
-    }
-    std::string arg;
-    if(argc > 1)
-        arg = argv[1];
+    std::string fixture_name;
+    for(auto arg : args)
+        if(arg.find("--") == string::npos)
+            fixture_name = arg;
 
     srand( time(0) );
 
@@ -128,7 +118,9 @@ int main( int argc, char* argv[] )
     else printf("\nFailure.\n");
 
     if(something_failed && !dontWaitOnFail)
-        system("/bin/bash -c 'read -p \"Press Any Key\"'");
+        system("/bin/bash -c 'read -p \"Press [enter] Key\"'");
+    else if(forceWait)
+        system("/bin/bash -c 'read -p \"Press [enter] Key\"'");
 
     return 0;
 }
