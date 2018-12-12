@@ -16,5 +16,5 @@ add_executable (webbie_ut include/framework.h
                           source/test_web_server.cpp)
 
 target_include_directories (webbie_ut PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-target_link_libraries (webbie_ut LINK_PUBLIC webbie cppkit)
+target_link_libraries(webbie_ut -static-libstdc++)
+target_link_libraries(webbie_ut webbie cppkit)
