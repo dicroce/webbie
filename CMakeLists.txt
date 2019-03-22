@@ -45,7 +45,7 @@ add_library (webbie include/webbie/client_request.h
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(cppkit PUBLIC "-O0")
-    target_compile_options(cppkit PUBLIC "-g")
+    target_compile_options(cppkit PUBLIC "-ggdb")
 else(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(cppkit PUBLIC "-O3")
 endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
