@@ -180,7 +180,7 @@ void client_response::_read_header_line(ck_stream_io& socket, char* writer, bool
         string msg = firstLine ? "The HTTP initial request line exceeded our max."
                                 : "The HTTP line exceeded our max.";
 
-        R_STHROW(r_http_exception_generic, (msg));
+        CK_STHROW(webbie_exception_generic, (msg));
     }
 }
 

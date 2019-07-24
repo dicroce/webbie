@@ -52,6 +52,6 @@ endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 target_include_directories (webbie PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_link_libraries (webbie cppkit)
+target_link_libraries (webbie cppkit pthread)
 
 add_subdirectory(ut)
